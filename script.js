@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyAllButton = document.getElementById('copy-all-button');
     const resetButton = document.getElementById('reset-button');
 
-    // player.html の要素 (DOMContentLoaded イベントリスナー内で条件分岐して取得)
+    // player.html の要素
     const passwordInput = document.getElementById('password-input');
     const revealButton = document.getElementById('reveal-button');
     const playerResultDisplay = document.getElementById('result-display');
@@ -37,7 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================================================================
     // index.html (GMツール) 関連の処理
     // ====================================================================
-    if (generateButton) { // generateButton が存在する場合、index.html の処理
+    // generateButtonが存在する場合、index.htmlの処理を実行
+    if (generateButton) { 
         // ページ読み込み時にroles.csvを自動で読み込む
         loadDefaultCsv();
         // ページ読み込み時に保存された状態を復元
@@ -66,19 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedThirdPartyCount = localStorage.getItem('savedThirdPartyCount');
             const savedPlayerAssignments = localStorage.getItem('playerAssignments');
 
-            if (savedParticipants) {
+            if (savedParticipants && participantsTextarea) {
                 participantsTextarea.value = savedParticipants;
             }
-            if (savedVillagerCount) {
+            if (savedVillagerCount && villagerCountInput) {
                 villagerCountInput.value = savedVillagerCount;
             }
-            if (savedWerewolfCount) {
+            if (savedWerewolfCount && werewolfCountInput) {
                 werewolfCountInput.value = savedWerewolfCount;
             }
-            if (savedThirdPartyCount) {
+            if (savedThirdPartyCount && thirdPartyCountInput) {
                 thirdPartyCountInput.value = savedThirdPartyCount;
             }
-            if (savedPlayerAssignments) {
+            if (savedPlayerAssignments && setupArea && resultArea) {
                 playerAssignments = JSON.parse(savedPlayerAssignments);
                 displayResults(playerAssignments);
                 setupArea.style.display = 'none';
@@ -87,19 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // CSVファイル読み込み (手動)
-        csvFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const text = e.target.result;
-                    rolesData = parseCSV(text);
-                    alert(`CSVファイルが読み込まれました。${rolesData.length}個の役職が登録されました。`);
-                    console.log('Parsed Roles Data:', rolesData);
-                };
-                reader.readAsText(file);
-            }
-        });
+        if (csvFileInput) {
+            csvFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const text = e.target.result;
+                        rolesData = parseCSV(text);
+                        alert(`CSVファイルが読み込まれました。${rolesData.length}個の役職が登録されました。`);
+                        console.log('Parsed Roles Data:', rolesData);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
 
         // CSVパース関数
         function parseCSV(text) {
@@ -120,43 +123,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 役職抽選ボタン
-        generateButton.addEventListener('click', () => {
-            const participants = participantsTextarea.value.split('\n').map(name => name.trim()).filter(name => name !== '');
-            const villagerCount = parseInt(villagerCountInput.value);
-            const werewolfCount = parseInt(werewolfCountInput.value);
-            const thirdPartyCount = parseInt(thirdPartyCountInput.value);
+        if (generateButton) {
+            generateButton.addEventListener('click', () => {
+                const participants = participantsTextarea ? participantsTextarea.value.split('\n').map(name => name.trim()).filter(name => name !== '') : [];
+                const villagerCount = villagerCountInput ? parseInt(villagerCountInput.value) : 0;
+                const werewolfCount = werewolfCountInput ? parseInt(werewolfCountInput.value) : 0;
+                const thirdPartyCount = thirdPartyCountInput ? parseInt(thirdPartyCountInput.value) : 0;
 
-            const totalRolesCount = villagerCount + werewolfCount + thirdPartyCount;
+                const totalRolesCount = villagerCount + werewolfCount + thirdPartyCount;
 
-            if (participants.length === 0) {
-                alert('参加者を入力してください。');
-                return;
-            }
-            if (rolesData.length === 0) {
-                alert('役職CSVファイルを読み込んでください。');
-                return;
-            }
-            if (participants.length !== totalRolesCount) {
-                alert(`参加者の数 (${participants.length}人) と役職の合計人数 (${totalRolesCount}人) が一致しません。`);
-                return;
-            }
+                if (participants.length === 0) {
+                    alert('参加者を入力してください。');
+                    return;
+                }
+                if (rolesData.length === 0) {
+                    alert('役職CSVファイルを読み込んでください。');
+                    return;
+                }
+                if (participants.length !== totalRolesCount) {
+                    alert(`参加者の数 (${participants.length}人) と役職の合計人数 (${totalRolesCount}人) が一致しません。`);
+                    return;
+                }
 
-            // 役職割り当てロジック
-            playerAssignments = assignRoles(participants, rolesData, { villager: villagerCount, werewolf: werewolfCount, thirdParty: thirdPartyCount });
-            
-            // 結果表示
-            displayResults(playerAssignments);
+                // 役職割り当てロジック
+                playerAssignments = assignRoles(participants, rolesData, { villager: villagerCount, werewolf: werewolfCount, thirdParty: thirdPartyCount });
+                
+                // 結果表示
+                displayResults(playerAssignments);
 
-            // localStorage に保存
-            localStorage.setItem('savedParticipants', participantsTextarea.value);
-            localStorage.setItem('savedVillagerCount', villagerCountInput.value);
-            localStorage.setItem('savedWerewolfCount', werewolfCountInput.value);
-            localStorage.setItem('savedThirdPartyCount', thirdPartyCountInput.value);
-            localStorage.setItem('playerAssignments', JSON.stringify(playerAssignments));
+                // localStorage に保存
+                if (participantsTextarea) localStorage.setItem('savedParticipants', participantsTextarea.value);
+                if (villagerCountInput) localStorage.setItem('savedVillagerCount', villagerCountInput.value);
+                if (werewolfCountInput) localStorage.setItem('savedWerewolfCount', werewolfCountInput.value);
+                if (thirdPartyCountInput) localStorage.setItem('savedThirdPartyCount', thirdPartyCountInput.value);
+                localStorage.setItem('playerAssignments', JSON.stringify(playerAssignments));
 
-            setupArea.style.display = 'none';
-            resultArea.style.display = 'block';
-        });
+                if (setupArea) setupArea.style.display = 'none';
+                if (resultArea) resultArea.style.display = 'block';
+            });
+        }
 
         // 役職割り当て関数
         function assignRoles(participants, rolesData, counts) {
@@ -227,52 +232,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 gmDetailedAssignmentsText += `${assignment.name}: ${assignment.role} (${assignment.team})\n  能力: ${assignment.ability || 'なし'}\n  勝利条件: ${assignment.winCondition || 'なし'}\n\n`;
             });
 
-            combinedOutput.value = combinedOutputText;
-            gmDetailedAssignments.innerHTML = gmDetailedAssignmentsText;
+            if (combinedOutput) combinedOutput.value = combinedOutputText;
+            if (gmDetailedAssignments) gmDetailedAssignments.innerHTML = gmDetailedAssignmentsText;
         }
 
         // すべてコピーボタン
-        copyAllButton.addEventListener('click', () => {
-            combinedOutput.select();
-            document.execCommand('copy');
-            alert('共有情報をコピーしました！');
-        });
+        if (copyAllButton) {
+            copyAllButton.addEventListener('click', () => {
+                if (combinedOutput) combinedOutput.select();
+                document.execCommand('copy');
+                alert('共有情報をコピーしました！');
+            });
+        }
 
         // リセットボタン
-        resetButton.addEventListener('click', () => {
-            participantsTextarea.value = '';
-            csvFileInput.value = ''; // ファイル選択をクリア
-            villagerCountInput.value = '0';
-            werewolfCountInput.value = '0';
-            thirdPartyCountInput.value = '0';
-            rolesData = [];
-            playerAssignments = [];
-            localStorage.removeItem('playerAssignments'); // localStorage もクリア
+        if (resetButton) {
+            resetButton.addEventListener('click', () => {
+                if (participantsTextarea) participantsTextarea.value = '';
+                if (csvFileInput) csvFileInput.value = ''; // ファイル選択をクリア
+                if (villagerCountInput) villagerCountInput.value = '0';
+                if (werewolfCountInput) werewolfCountInput.value = '0';
+                if (thirdPartyCountInput) thirdPartyCountInput.value = '0';
+                rolesData = [];
+                playerAssignments = [];
+                localStorage.removeItem('playerAssignments'); // localStorage もクリア
+                localStorage.removeItem('savedParticipants');
+                localStorage.removeItem('savedVillagerCount');
+                localStorage.removeItem('savedWerewolfCount');
+                localStorage.removeItem('savedThirdPartyCount');
 
-            resultArea.style.display = 'none';
-            setupArea.style.display = 'block';
-            combinedOutput.value = '';
-            gmDetailedAssignments.innerHTML = '';
-        });
+                if (resultArea) resultArea.style.display = 'none';
+                if (setupArea) setupArea.style.display = 'block';
+                if (combinedOutput) combinedOutput.value = '';
+                if (gmDetailedAssignments) gmDetailedAssignments.innerHTML = '';
+            });
+        }
     } 
     // ====================================================================
     // player.html (役職確認ツール) 関連の処理
     // ====================================================================
-    else if (revealButton) { // revealButton が存在する場合、player.html の処理
+    // revealButtonが存在する場合、player.htmlの処理を実行
+    else if (revealButton) { 
         // 役職表示ロジックを関数として抽出
         function revealRole(passwordToUse) {
             const storedAssignments = JSON.parse(localStorage.getItem('playerAssignments') || '[]');
             const assignment = storedAssignments.find(assign => assign.password === passwordToUse);
 
             if (assignment) {
-                roleOutput.textContent = assignment.role;
-                teamOutput.textContent = assignment.team;
-                abilityOutput.textContent = assignment.ability || 'なし';
-                winConditionOutput.textContent = assignment.winCondition || 'なし';
-                playerResultDisplay.style.display = 'block';
+                if (roleOutput) roleOutput.textContent = assignment.role;
+                if (teamOutput) teamOutput.textContent = assignment.team;
+                if (abilityOutput) abilityOutput.textContent = assignment.ability || 'なし';
+                if (winConditionOutput) winConditionOutput.textContent = assignment.winCondition || 'なし';
+                if (playerResultDisplay) playerResultDisplay.style.display = 'block';
             } else {
                 alert('合言葉が間違っています。');
-                playerResultDisplay.style.display = 'none';
+                if (playerResultDisplay) playerResultDisplay.style.display = 'none';
             }
         }
 
@@ -282,14 +296,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (urlPassword) {
             const decodedUrlPassword = decodeURIComponent(urlPassword); // URLエンコードされた日本語をデコード
-            passwordInput.value = decodedUrlPassword; // 入力欄にセット
+            if (passwordInput) passwordInput.value = decodedUrlPassword; // 入力欄にセット
             revealRole(decodedUrlPassword); // 自動的に役職表示ロジックを実行
         }
 
         // 手動入力ボタンのイベントリスナーは常に設定
-        revealButton.addEventListener('click', () => {
-            const enteredPassword = passwordInput.value.trim(); // 日本語なのでtoUpperCase()は不要
-            revealRole(enteredPassword);
-        });
+        if (revealButton) {
+            revealButton.addEventListener('click', () => {
+                const enteredPassword = passwordInput ? passwordInput.value.trim() : ''; // passwordInputが存在するか確認
+                revealRole(enteredPassword);
+            });
+        }
     }
 });
