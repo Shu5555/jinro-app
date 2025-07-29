@@ -3,19 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ドキドキ役職人狼メーカー - 役職確認</title>
+    <title>ドキドキ役職人狼ゲーム - 役職確認</title>
     <style>
-        body { font-family: sans-serif; margin: 2em; text-align: center; }
-        h1, h2 { color: #333; }
-        textarea, input { width: 80%; max-width: 500px; margin-bottom: 1em; padding: 10px; }
-        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; }
-        button:hover { background-color: #218838; }
-        #result-display { margin-top: 2em; padding: 2em; background-color: #f4f4f4; border-radius: 8px; display: inline-block; }
+        @import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e0ffff 100%);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        h1 {
+            font-family: 'Mochiy Pop P One', cursive;
+            color: #ff69b4; /* ホットピンク */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            max-width: 400px;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 2px solid #add8e6;
+            border-radius: 8px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 15px 30px;
+            background-color: #28a745; /* 緑 */
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.3em;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #218838; /* 濃い緑 */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        #result-display {
+            margin-top: 30px;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            display: inline-block;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #result-display h2 {
+            color: #4682b4; /* スチールブルー */
+            border-bottom: 2px solid #add8e6;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 700;
+        }
+
+        #role-output {
+            font-family: 'Mochiy Pop P One', cursive;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ff69b4; /* ホットピンク */
+            margin-bottom: 1em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        #result-display p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            text-align: left;
+            margin-bottom: 10px;
+        }
+
+        #result-display strong {
+            color: #4682b4;
+        }
     </style>
 </head>
 <body>
 
-    <h1>役職確認ページ</h1>
+    <h1>ドキドキ役職人狼ゲーム - 役職確認</h1>
     <p>DMで届いた「合言葉」を入力してください。</p>
 
     <div>

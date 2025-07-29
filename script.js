@@ -1,298 +1,295 @@
-// --- 合言葉の単語リスト --- //
-const PASSWORD_WORDS = [
-    'りんご', 'みかん', 'バナナ', 'いちご', 'ぶどう', 'さくらんぼ', 'もも', 'すいか',
-    'めろん', 'れもん', 'ぱいなっぷる', 'なし', 'かき', 'きうい', 'びわ', 'あんず',
-    'いぬ', 'ねこ', 'うさぎ', 'ぱんだ', 'きりん', 'ぞう', 'らいおん', 'とら',
-    'さる', 'ひつじ', 'うま', 'しか', 'くま', 'りす', 'ハムスター', 'ぺんぎん',
-    'はる', 'なつ', 'あき', 'ふゆ', 'そら', 'くも', 'たいよう', 'つき',
-    'ほし', 'かぜ', 'あめ', 'ゆき', 'やま', 'かわ', 'うみ', 'もり'
-];
-
-// --- 共通の処理 --- //
-
-// Base64を使った簡易的な暗号化・復号
-// 実際の暗号化とは異なり、あくまで難読化レベルですが、今回の用途では十分です。
-function simpleEncrypt(text) {
-    try {
-        const textStr = JSON.stringify(text);
-        return btoa(encodeURIComponent(textStr));
-    } catch (e) {
-        console.error("暗号化に失敗しました", e);
-        return null;
-    }
-}
-
-function simpleDecrypt(encryptedText) {
-    try {
-        const decodedStr = decodeURIComponent(atob(encryptedText));
-        return JSON.parse(decodedStr);
-    } catch (e) {
-        console.error("復号に失敗しました", e);
-        return null;
-    }
-}
-
-// --- ページの初期化処理 --- //
-
 document.addEventListener('DOMContentLoaded', () => {
-    // GMページ（index.html）用の処理
-    if (document.getElementById('generate-button')) {
-        initializeGmPage();
-    }
+    // index.html の要素
+    const participantsTextarea = document.getElementById('participants');
+    const csvFileInput = document.getElementById('csv-file-input');
+    const villagerCountInput = document.getElementById('villager-count');
+    const werewolfCountInput = document.getElementById('werewolf-count');
+    const thirdPartyCountInput = document.getElementById('third-party-count');
+    const generateButton = document.getElementById('generate-button');
+    const setupArea = document.getElementById('setup-area');
+    const resultArea = document.getElementById('result-area');
+    const combinedOutput = document.getElementById('combined-output');
+    const gmDetailedAssignments = document.getElementById('gm-detailed-assignments');
+    const copyAllButton = document.getElementById('copy-all-button');
+    const resetButton = document.getElementById('reset-button');
 
-    // プレイヤーページ（player.html）用の処理
-    if (document.getElementById('reveal-button')) {
-        initializePlayerPage();
+    // player.html の要素 (DOMContentLoaded イベントリスナー内で条件分岐して取得)
+    const passwordInput = document.getElementById('password-input');
+    const revealButton = document.getElementById('reveal-button');
+    const playerResultDisplay = document.getElementById('result-display');
+    const roleOutput = document.getElementById('role-output');
+    const teamOutput = document.getElementById('team-output');
+    const abilityOutput = document.getElementById('ability-output');
+    const winConditionOutput = document.getElementById('win-condition-output');
+
+    let rolesData = []; // CSVから読み込んだ役職データを格納
+    let playerAssignments = []; // プレイヤーへの役職割り当て結果を格納
+
+    // 日本語の食べ物の合言葉リスト
+    const JAPANESE_FOOD_PASSWORDS = [
+        '寿司', 'ラーメン', '天ぷら', 'お好み焼き', 'たこ焼き', 'うどん', 'そば', 'カレー', 'とんかつ', '焼き鳥',
+        'おにぎり', '味噌汁', '刺身', '枝豆', '餃子', '唐揚げ', '焼き魚', 'すき焼き', 'しゃぶしゃぶ', 'おでん',
+        'もんじゃ焼き', 'カツ丼', '親子丼', '牛丼', 'うなぎ', 'とろろ', '茶碗蒸し', '漬物', '納豆', '梅干し',
+        'わさび', '生姜', '豆腐', 'こんにゃく', 'しいたけ', 'えのき', 'まいたけ', 'ごぼう', '大根', '白菜',
+        'ねぎ', 'ほうれん草', '小松菜', 'なす', 'ピーマン', 'きゅうり', 'トマト', 'じゃがいも', '玉ねぎ', 'にんじん'
+    ];
+
+    // ====================================================================
+    // index.html (GMツール) 関連の処理
+    // ====================================================================
+    if (generateButton) { // generateButton が存在する場合、index.html の処理
+        // ページ読み込み時にroles.csvを自動で読み込む
+        loadDefaultCsv();
+        // ページ読み込み時に保存された状態を復元
+        loadSavedState();
+
+        async function loadDefaultCsv() {
+            try {
+                const response = await fetch('roles.csv');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const text = await response.text();
+                rolesData = parseCSV(text);
+                console.log('roles.csvを自動で読み込みました。', rolesData);
+                alert('roles.csvを自動で読み込みました。');
+            } catch (error) {
+                console.error('roles.csvの自動読み込みに失敗しました:', error);
+                alert('roles.csvの自動読み込みに失敗しました。手動で選択してください。');
+            }
+        }
+
+        function loadSavedState() {
+            const savedParticipants = localStorage.getItem('savedParticipants');
+            const savedVillagerCount = localStorage.getItem('savedVillagerCount');
+            const savedWerewolfCount = localStorage.getItem('savedWerewolfCount');
+            const savedThirdPartyCount = localStorage.getItem('savedThirdPartyCount');
+            const savedPlayerAssignments = localStorage.getItem('playerAssignments');
+
+            if (savedParticipants) {
+                participantsTextarea.value = savedParticipants;
+            }
+            if (savedVillagerCount) {
+                villagerCountInput.value = savedVillagerCount;
+            }
+            if (savedWerewolfCount) {
+                werewolfCountInput.value = savedWerewolfCount;
+            }
+            if (savedThirdPartyCount) {
+                thirdPartyCountInput.value = savedThirdPartyCount;
+            }
+            if (savedPlayerAssignments) {
+                playerAssignments = JSON.parse(savedPlayerAssignments);
+                displayResults(playerAssignments);
+                setupArea.style.display = 'none';
+                resultArea.style.display = 'block';
+            }
+        }
+
+        // CSVファイル読み込み (手動)
+        csvFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    rolesData = parseCSV(text);
+                    alert(`CSVファイルが読み込まれました。${rolesData.length}個の役職が登録されました。`);
+                    console.log('Parsed Roles Data:', rolesData);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // CSVパース関数
+        function parseCSV(text) {
+            const lines = text.split('\n').filter(line => line.trim() !== '');
+            const headers = lines[0].split(',');
+            const roles = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                if (values.length === headers.length) {
+                    const role = {};
+                    headers.forEach((header, index) => {
+                        role[header.trim()] = values[index].trim();
+                    });
+                    roles.push(role);
+                }
+            }
+            return roles;
+        }
+
+        // 役職抽選ボタン
+        generateButton.addEventListener('click', () => {
+            const participants = participantsTextarea.value.split('\n').map(name => name.trim()).filter(name => name !== '');
+            const villagerCount = parseInt(villagerCountInput.value);
+            const werewolfCount = parseInt(werewolfCountInput.value);
+            const thirdPartyCount = parseInt(thirdPartyCountInput.value);
+
+            const totalRolesCount = villagerCount + werewolfCount + thirdPartyCount;
+
+            if (participants.length === 0) {
+                alert('参加者を入力してください。');
+                return;
+            }
+            if (rolesData.length === 0) {
+                alert('役職CSVファイルを読み込んでください。');
+                return;
+            }
+            if (participants.length !== totalRolesCount) {
+                alert(`参加者の数 (${participants.length}人) と役職の合計人数 (${totalRolesCount}人) が一致しません。`);
+                return;
+            }
+
+            // 役職割り当てロジック
+            playerAssignments = assignRoles(participants, rolesData, { villager: villagerCount, werewolf: werewolfCount, thirdParty: thirdPartyCount });
+            
+            // 結果表示
+            displayResults(playerAssignments);
+
+            // localStorage に保存
+            localStorage.setItem('savedParticipants', participantsTextarea.value);
+            localStorage.setItem('savedVillagerCount', villagerCountInput.value);
+            localStorage.setItem('savedWerewolfCount', werewolfCountInput.value);
+            localStorage.setItem('savedThirdPartyCount', thirdPartyCountInput.value);
+            localStorage.setItem('playerAssignments', JSON.stringify(playerAssignments));
+
+            setupArea.style.display = 'none';
+            resultArea.style.display = 'block';
+        });
+
+        // 役職割り当て関数
+        function assignRoles(participants, rolesData, counts) {
+            const assignments = [];
+            let availableRoles = [];
+
+            // 各陣営から必要な数の役職をランダムに選択
+            const getRolesByTeam = (teamName, count) => {
+                const rolesInTeam = rolesData.filter(role => role['陣営'] === teamName);
+                if (rolesInTeam.length < count) {
+                    console.warn(`Warning: Not enough roles for ${teamName}. Requested: ${count}, Available: ${rolesInTeam.length}`);
+                    // 足りない場合は利用可能な役職をすべて追加し、残りは仮の役職で埋める
+                    const tempRoles = Array(count - rolesInTeam.length).fill({ '役職名': `仮の${teamName}役職`, '陣営': teamName, '能力': '', '勝利条件': '' });
+                    return [...rolesInTeam, ...tempRoles];
+                }
+                // ランダムに選択
+                return [...rolesInTeam].sort(() => Math.random() - 0.5).slice(0, count);
+            };
+
+            availableRoles = [
+                ...getRolesByTeam('村人陣営', counts.villager),
+                ...getRolesByTeam('人狼陣営', counts.werewolf),
+                ...getRolesByTeam('第三陣営', counts.thirdParty)
+            ];
+
+            // 参加者と役職をシャッフル
+            const shuffledParticipants = [...participants].sort(() => Math.random() - 0.5);
+            const shuffledRoles = [...availableRoles].sort(() => Math.random() - 0.5);
+
+            // 使用済みの合言葉を追跡するためのセット
+            const usedPasswords = new Set();
+
+            shuffledParticipants.forEach((participant, index) => {
+                const assignedRole = shuffledRoles[index];
+                let password = generatePassword();
+                // 合言葉が重複しないように再生成
+                while (usedPasswords.has(password)) {
+                    password = generatePassword();
+                }
+                usedPasswords.add(password);
+
+                assignments.push({
+                    name: participant,
+                    role: assignedRole['役職名'],
+                    team: assignedRole['陣営'],
+                    ability: assignedRole['能力'],
+                    winCondition: assignedRole['勝利条件'],
+                    password: password
+                });
+            });
+            return assignments;
+        }
+
+        // 合言葉生成関数 (日本語の食べ物)
+        function generatePassword() {
+            const randomIndex = Math.floor(Math.random() * JAPANESE_FOOD_PASSWORDS.length);
+            return JAPANESE_FOOD_PASSWORDS[randomIndex];
+        }
+
+        // 結果表示関数
+        function displayResults(assignments) {
+            const baseUrl = window.location.origin + '/player.html';
+            let combinedOutputText = `共有URL: ${baseUrl}\n\n`; // 共通URLを一行目に
+            let gmDetailedAssignmentsText = '';
+
+            assignments.forEach(assignment => {
+                combinedOutputText += `${assignment.name}: ${assignment.password}\n`; // 各プレイヤーの名前と合言葉のみ
+                gmDetailedAssignmentsText += `${assignment.name}: ${assignment.role} (${assignment.team})\n  能力: ${assignment.ability || 'なし'}\n  勝利条件: ${assignment.winCondition || 'なし'}\n\n`;
+            });
+
+            combinedOutput.value = combinedOutputText;
+            gmDetailedAssignments.innerHTML = gmDetailedAssignmentsText;
+        }
+
+        // すべてコピーボタン
+        copyAllButton.addEventListener('click', () => {
+            combinedOutput.select();
+            document.execCommand('copy');
+            alert('共有情報をコピーしました！');
+        });
+
+        // リセットボタン
+        resetButton.addEventListener('click', () => {
+            participantsTextarea.value = '';
+            csvFileInput.value = ''; // ファイル選択をクリア
+            villagerCountInput.value = '0';
+            werewolfCountInput.value = '0';
+            thirdPartyCountInput.value = '0';
+            rolesData = [];
+            playerAssignments = [];
+            localStorage.removeItem('playerAssignments'); // localStorage もクリア
+
+            resultArea.style.display = 'none';
+            setupArea.style.display = 'block';
+            combinedOutput.value = '';
+            gmDetailedAssignments.innerHTML = '';
+        });
+    } 
+    // ====================================================================
+    // player.html (役職確認ツール) 関連の処理
+    // ====================================================================
+    else if (revealButton) { // revealButton が存在する場合、player.html の処理
+        // 役職表示ロジックを関数として抽出
+        function revealRole(passwordToUse) {
+            const storedAssignments = JSON.parse(localStorage.getItem('playerAssignments') || '[]');
+            const assignment = storedAssignments.find(assign => assign.password === passwordToUse);
+
+            if (assignment) {
+                roleOutput.textContent = assignment.role;
+                teamOutput.textContent = assignment.team;
+                abilityOutput.textContent = assignment.ability || 'なし';
+                winConditionOutput.textContent = assignment.winCondition || 'なし';
+                playerResultDisplay.style.display = 'block';
+            } else {
+                alert('合言葉が間違っています。');
+                playerResultDisplay.style.display = 'none';
+            }
+        }
+
+        // URLから合言葉を取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlPassword = urlParams.get('password');
+
+        if (urlPassword) {
+            const decodedUrlPassword = decodeURIComponent(urlPassword); // URLエンコードされた日本語をデコード
+            passwordInput.value = decodedUrlPassword; // 入力欄にセット
+            revealRole(decodedUrlPassword); // 自動的に役職表示ロジックを実行
+        }
+
+        // 手動入力ボタンのイベントリスナーは常に設定
+        revealButton.addEventListener('click', () => {
+            const enteredPassword = passwordInput.value.trim(); // 日本語なのでtoUpperCase()は不要
+            revealRole(enteredPassword);
+        });
     }
 });
-
-// --- GMページのロジック --- //
-
-function initializeGmPage() {
-    const generateButton = document.getElementById('generate-button');
-    const csvFileInput = document.getElementById('csv-file-input');
-
-    // ページ読み込み時にroles.csvを自動で読み込む試み
-    fetch('roles.csv')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('roles.csvが見つかりません。手動でファイルを選択してください。');
-            }
-            return response.text();
-        })
-        .then(csvText => {
-            parseComplexCsvAndStoreRoles(csvText);
-            console.log('roles.csvを自動的に読み込みました。');
-        })
-        .catch(error => {
-            console.warn(error.message);
-        });
-
-    csvFileInput.addEventListener('change', handleCsvFile);
-
-    generateButton.addEventListener('click', () => {
-        // 入力値の取得
-        const participants = document.getElementById('participants').value.trim().split('\n');
-        const villagerRoles = document.getElementById('villager-roles').value.trim().split('\n');
-        const werewolfRoles = document.getElementById('werewolf-roles').value.trim().split('\n');
-        const thirdPartyRoles = document.getElementById('third-party-roles').value.trim().split('\n');
-        const villagerCount = parseInt(document.getElementById('villager-count').value, 10);
-        const werewolfCount = parseInt(document.getElementById('werewolf-count').value, 10);
-        const thirdPartyCount = parseInt(document.getElementById('third-party-count').value, 10);
-
-        // 簡単なバリデーション
-        const totalRoles = villagerCount + werewolfCount + thirdPartyCount;
-        if (participants.length !== totalRoles) {
-            alert(`参加者の人数 (${participants.length}人) と、割り当てる役職の合計数 (${totalRoles}人) が一致しません。`);
-            return;
-        }
-
-        // 役職リストの作成とシャッフル
-                // 役職リストの作成とシャッフル (parsedRolesDataから詳細情報を持つ役職オブジェクトを取得)
-        let allRolesWithDetails = [];
-        allRolesWithDetails = allRolesWithDetails.concat(selectRandomRolesWithDetails(parsedRolesData.villager, villagerCount));
-        allRolesWithDetails = allRolesWithDetails.concat(selectRandomRolesWithDetails(parsedRolesData.werewolf, werewolfCount));
-        allRolesWithDetails = allRolesWithDetails.concat(selectRandomRolesWithDetails(parsedRolesData.thirdParty, thirdPartyCount));
-        shuffleArray(allRolesWithDetails);
-
-        // 参加者と役職の割り当てデータを作成
-        const assignments = {};
-        const passwords = {};
-        const shuffledParticipants = [...participants];
-        shuffleArray(shuffledParticipants);
-
-        // 合言葉の単語リストをシャッフルして、重複なく使えるように準備
-        const shuffledPasswordWords = [...PASSWORD_WORDS];
-        shuffleArray(shuffledPasswordWords);
-        if (shuffledParticipants.length > shuffledPasswordWords.length) {
-            alert('参加者の人数が合言葉リストの上限を超えています。開発者にご連絡ください。');
-            return;
-        }
-
-        shuffledParticipants.forEach((participant, index) => {
-            const password = shuffledPasswordWords[index]; // シャッフルされたリストから合言葉を取得
-            assignments[password] = {
-                name: participant,
-                role: allRolesWithDetails[index]
-            };
-            passwords[participant] = password;
-        });
-
-        // データを暗号化してURLを生成
-        const encryptedString = simpleEncrypt(assignments);
-        const playerPageUrl = window.location.href.replace(/index\.html$/, 'player.html');
-        const sharedUrl = `${playerPageUrl}#${encryptedString}`;
-
-        // 結果の表示
-        document.getElementById('shared-url').value = sharedUrl;
-        const passwordsList = document.getElementById('passwords-list');
-        passwordsList.textContent = ''; // クリア
-        for (const name in passwords) {
-            passwordsList.textContent += `${name}: ${passwords[name]}\n`;
-        }
-
-        document.getElementById('result-area').style.display = 'block';
-    });
-
-    const copyUrlButton = document.getElementById('copy-url-button');
-    copyUrlButton.addEventListener('click', () => {
-        const urlInput = document.getElementById('shared-url');
-        urlInput.select();
-        document.execCommand('copy');
-        alert('URLをコピーしました！');
-    });
-}
-
-// CSVファイルを処理する関数
-function handleCsvFile(event) {
-    const file = event.target.files[0];
-    if (!file) {
-        return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const text = e.target.result;
-        try {
-            parseComplexCsvAndStoreRoles(text);
-        } catch (error) {
-            alert(error.message);
-        }
-    };
-    reader.readAsText(file);
-}
-
-// CSVテキストを解析してテキストエリアに設定する関数
-let parsedRolesData = {
-    villager: [],
-    werewolf: [],
-    thirdParty: []
-};
-
-// CSVテキストを解析してテキストエリアに設定する関数 (新しい形式に対応)
-function parseComplexCsvAndStoreRoles(csvText) {
-    const lines = csvText.trim().split(/\r\n|\n/);
-    if (lines.length < 2) {
-        throw new Error('CSVファイルにはヘッダー行と少なくとも1行のデータが必要です。');
-    }
-
-    const headers = lines[0].split(',').map(h => h.trim());
-
-    // ヘッダーから役職名、陣営、能力、勝利条件のインデックスをマッピング
-    let nameIdx = -1;
-    let teamIdx = -1;
-    let abilityIdx = -1;
-    let winConditionIdx = -1;
-
-    headers.forEach((header, index) => {
-        if (header === '役職名') {
-            nameIdx = index;
-        } else if (header === '陣営') {
-            teamIdx = index;
-        } else if (header === '能力') {
-            abilityIdx = index;
-        } else if (header === '勝利条件') {
-            winConditionIdx = index;
-        }
-    });
-
-    if (nameIdx === -1 || teamIdx === -1 || abilityIdx === -1 || winConditionIdx === -1) {
-        throw new Error('CSVファイルに「役職名」「陣営」「能力」「勝利条件」のヘッダーが不足しています。変換ツールで生成したCSVを使用してください。');
-    }
-
-    // 役職データを解析して格納
-    parsedRolesData = {
-        villager: [],
-        werewolf: [],
-        thirdParty: []
-    };
-
-    for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(',');
-        const roleName = cols[nameIdx] ? cols[nameIdx].trim() : '';
-        const team = cols[teamIdx] ? cols[teamIdx].trim() : '';
-        const ability = cols[abilityIdx] ? cols[abilityIdx].trim() : '';
-        const winCondition = cols[winConditionIdx] ? cols[winConditionIdx].trim() : '';
-
-        if (roleName && team) {
-            const roleObject = {
-                name: roleName,
-                team: team,
-                ability: ability,
-                winCondition: winCondition
-            };
-
-            if (team === '村人陣営') {
-                parsedRolesData.villager.push(roleObject);
-            } else if (team === '人狼陣営') {
-                parsedRolesData.werewolf.push(roleObject);
-            } else if (team === '第三陣営') {
-                parsedRolesData.thirdParty.push(roleObject);
-            }
-        }
-    }
-
-    // GMページのテキストエリアに役職名のみを表示
-    document.getElementById('villager-roles').value = parsedRolesData.villager.map(r => r.name).join('\n');
-    document.getElementById('werewolf-roles').value = parsedRolesData.werewolf.map(r => r.name).join('\n');
-    document.getElementById('third-party-roles').value = parsedRolesData.thirdParty.map(r => r.name).join('\n');
-}
-
-// 配列からランダムに要素を選択するヘルパー関数 (詳細情報を持つ役職オブジェクトを返す)
-function selectRandomRolesWithDetails(rolesArray, count) {
-    const shuffled = [...rolesArray].filter(r => r.name.trim() !== ''); // 名前が空でないものをフィルタ
-    shuffleArray(shuffled);
-    return shuffled.slice(0, count);
-}
-
-// 配列をシャッフルする（Fisher-Yatesアルゴリズム）
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-
-// --- プレイヤーページのロジック --- //
-
-function initializePlayerPage() {
-    const revealButton = document.getElementById('reveal-button');
-    let assignments = null;
-
-    // URLのハッシュから暗号化データを読み込む
-    try {
-        const encryptedString = window.location.hash.substring(1);
-        if (encryptedString) {
-            assignments = simpleDecrypt(encryptedString);
-        }
-        if (!assignments) {
-             throw new Error('URLに役職データが含まれていません。');
-        }
-    } catch (e) {
-        document.body.innerHTML = `<h1>エラー</h1><p>無効なURLです。GMから共有された正しいURLを開いているか確認してください。</p><p style="color: red;">${e.message}</p>`;
-        return;
-    }
-
-    revealButton.addEventListener('click', () => {
-        const password = document.getElementById('password-input').value.trim();
-
-        if (!password) {
-            alert('合言葉を入力してください。');
-            return;
-        }
-
-        // 合言葉に対応する役職を検索
-        const myData = assignments[password];
-        if (myData) {
-            document.getElementById('role-output').textContent = myData.role.name;
-            document.getElementById('team-output').textContent = myData.role.team;
-            document.getElementById('ability-output').textContent = myData.role.ability || 'なし';
-            document.getElementById('win-condition-output').textContent = myData.role.winCondition || 'なし';
-            document.getElementById('result-display').style.display = 'block';
-        } else {
-            alert('合言葉が間違っているか、対応する役職が見つかりません。');
-            document.getElementById('result-display').style.display = 'none';
-        }
-    });
-}

@@ -3,24 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ドキドキ役職人狼メーカー - GMツール</title>
+    <title>ドキドキ役職人狼ゲーム - GMツール</title>
     <style>
-        body { font-family: sans-serif; margin: 2em; }
-        h1, h2 { color: #333; }
-        textarea { width: 90%; height: 100px; margin-bottom: 1em; }
-        .team-section { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; border-radius: 8px; }
-        .team-section h2 { margin-top: 0; }
-        input[type="number"] { width: 60px; }
-        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        #result-area { margin-top: 2em; }
-        #encrypted-string { width: 90%; height: 150px; }
-        #passwords-list { white-space: pre-wrap; background-color: #f4f4f4; padding: 1em; border-radius: 5px; }
+        @import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f0f8ff 0%, #e0ffff 100%);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Mochiy Pop P One', cursive;
+            color: #ff69b4; /* ホットピンク */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        h2, h3 {
+            color: #4682b4; /* スチールブルー */
+            border-bottom: 2px solid #add8e6; /* ライトブルー */
+            padding-bottom: 5px;
+            margin-top: 25px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 700;
+        }
+
+        #setup-area, #result-area {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+
+        textarea, input[type="text"], input[type="number"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #add8e6;
+            border-radius: 8px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        input[type="file"] {
+            margin-bottom: 15px;
+        }
+
+        .team-section {
+            border: 2px dashed #add8e6;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            background-color: #f8f8ff; /* ゴーストホワイト */
+        }
+
+        .team-section label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 12px 25px;
+            background-color: #ff69b4; /* ホットピンク */
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #ff1493; /* ディープピンク */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        #combined-output {
+            width: calc(100% - 20px);
+            height: 250px;
+            font-size: 0.9em;
+            border: 2px solid #add8e6;
+            border-radius: 8px;
+            padding: 10px;
+            box-sizing: border-box;
+            background-color: #f0f8ff; /* アリスブルー */
+        }
+
+        #copy-all-button {
+            background-color: #4682b4; /* スチールブルー */
+        }
+
+        #copy-all-button:hover {
+            background-color: #36648b; /* ダークスチールブルー */
+        }
     </style>
 </head>
 <body>
 
-    <h1>ドキドキ役職人狼メーカー - GMツール</h1>
+    <h1>ドキドキ役職人狼ゲーム - GMツール</h1>
 
     <div id="setup-area">
         <h2>1. 参加者リスト</h2>
@@ -32,35 +129,35 @@
 
         <div class="team-section">
             <h3>村人陣営</h3>
-            <textarea id="villager-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
             <label>人数: <input type="number" id="villager-count" value="0"></label>
         </div>
 
         <div class="team-section">
             <h3>人狼陣営</h3>
-            <textarea id="werewolf-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
             <label>人数: <input type="number" id="werewolf-count" value="0"></label>
         </div>
 
         <div class="team-section">
             <h3>第三陣営</h3>
-            <textarea id="third-party-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
             <label>人数: <input type="number" id="third-party-count" value="0"></label>
         </div>
 
-        <button id="generate-button">割り当てを実行し、コマンドと合言葉を生成</button>
+        <button id="generate-button">役職抽選へ</button>
     </div>
 
     <div id="result-area" style="display:none;">
         <h2>5. 結果</h2>
         <p>以下の共有URLをDiscordの全体チャンネルに投稿し、各プレイヤーに個別の合言葉をDMで伝えてください。</p>
 
-        <h3>共有URL (これを全体チャンネルに投稿):</h3>
-        <input type="text" id="shared-url" readonly style="width: 90%; padding: 8px;">
-        <button id="copy-url-button">URLをコピー</button>
+        <h3>共有情報 (これをコピーしてDiscordに貼り付け):</h3>
+        <textarea id="combined-output" readonly style="width: 90%; height: 250px; font-size: 0.9em;"></textarea>
+        <button id="copy-all-button">すべてコピー</button>
 
-        <h3>各プレイヤーの合言葉 (これを個別にDMで通知):</h3>
-        <div id="passwords-list"></div>
+        <h3 style="margin-top: 30px;">GM確認用: 割り当て詳細一覧</h3>
+        <div id="gm-detailed-assignments" style="white-space: pre-wrap; background-color: #f8f8f8; padding: 15px; border-radius: 8px; border: 1px solid #eee; max-height: 300px; overflow-y: auto; font-size: 0.9em;">
+            <!-- 詳細な割り当て情報がここに表示されます -->
+        </div>
+        <button id="reset-button" style="background-color: #dc3545; margin-top: 20px;">リセット</button>
     </div>
 
     <script src="script.js"></script>
