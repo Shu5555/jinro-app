@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ドキドキ役職人狼メーカー - GMツール</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        h1, h2 { color: #333; }
+        textarea { width: 90%; height: 100px; margin-bottom: 1em; }
+        .team-section { border: 1px solid #ccc; padding: 1em; margin-bottom: 1em; border-radius: 8px; }
+        .team-section h2 { margin-top: 0; }
+        input[type="number"] { width: 60px; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #result-area { margin-top: 2em; }
+        #encrypted-string { width: 90%; height: 150px; }
+        #passwords-list { white-space: pre-wrap; background-color: #f4f4f4; padding: 1em; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>ドキドキ役職人狼メーカー - GMツール</h1>
+
+    <div id="setup-area">
+        <h2>1. 参加者リスト</h2>
+        <textarea id="participants" placeholder="参加者の名前を1行に1人ずつ入力してください"></textarea>
+
+        <h2>2. 役職リスト</h2>
+        <p>下のボタンから役職が書かれたCSVファイルを読み込んでください。</p>
+        <input type="file" id="csv-file-input" accept=".csv">
+
+        <div class="team-section">
+            <h3>村人陣営</h3>
+            <textarea id="villager-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
+            <label>人数: <input type="number" id="villager-count" value="0"></label>
+        </div>
+
+        <div class="team-section">
+            <h3>人狼陣営</h3>
+            <textarea id="werewolf-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
+            <label>人数: <input type="number" id="werewolf-count" value="0"></label>
+        </div>
+
+        <div class="team-section">
+            <h3>第三陣営</h3>
+            <textarea id="third-party-roles" placeholder="CSVファイルを読み込むとここに役職が表示されます" readonly></textarea>
+            <label>人数: <input type="number" id="third-party-count" value="0"></label>
+        </div>
+
+        <button id="generate-button">割り当てを実行し、コマンドと合言葉を生成</button>
+    </div>
+
+    <div id="result-area" style="display:none;">
+        <h2>5. 結果</h2>
+        <p>以下の共有URLをDiscordの全体チャンネルに投稿し、各プレイヤーに個別の合言葉をDMで伝えてください。</p>
+
+        <h3>共有URL (これを全体チャンネルに投稿):</h3>
+        <input type="text" id="shared-url" readonly style="width: 90%; padding: 8px;">
+        <button id="copy-url-button">URLをコピー</button>
+
+        <h3>各プレイヤーの合言葉 (これを個別にDMで通知):</h3>
+        <div id="passwords-list"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
