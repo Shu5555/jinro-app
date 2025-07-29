@@ -223,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 結果表示関数
         function displayResults(assignments) {
-            const baseUrl = window.location.origin + '/player.html';
+            const baseUrl = window.location.origin + '/jinro-app/player.html';
             let combinedOutputText = `共有URL: ${baseUrl}\n\n`; // 共通URLを一行目に
             let gmDetailedAssignmentsText = '';
 
