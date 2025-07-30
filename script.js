@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function displayResults(assignments) {
             // 全プレイヤーの役職情報をエンコードしてURLに含める (btoaを廃止し、よりシンプルな方式に変更)
             const data = encodeURIComponent(JSON.stringify(assignments));
-            const baseUrl = window.location.href.replace('index.html', 'player.html');
+            const baseUrl = new URL('player.html', window.location.href).href;
             const shareUrl = `${baseUrl}?data=${data}`;
 
             combinedOutput.value = `共有URL: ${shareUrl}\n\n` +
