@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         async function loadDefaultCsv() {
             try {
-                const response = await fetch('roles.csv');
+                const response = await fetch('./roles.csv');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const text = await response.text();
                 rolesData = parseCSV(text);
