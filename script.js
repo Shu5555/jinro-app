@@ -1,9 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Firebaseの初期化
-    if (typeof firebase !== 'undefined' && firebaseConfig) {
-        firebase.initializeApp(firebaseConfig);
-    }
-
     // 要素の取得
     const participantsTextarea = document.getElementById('participants');
     const csvFileInput = document.getElementById('csv-file-input');
@@ -29,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rolesData = [];
     let playerAssignments = [];
+    let allAssignmentsData = null; // player.html用
 
     const JAPANESE_FOOD_PASSWORDS = [
         '寿司', 'ラーメン', '天ぷら', 'お好み焼き', 'たこ焼き', 'うどん', 'そば', 'カレー', 'とんかつ', '焼き鳥',
@@ -76,6 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 thirdPartyCountInput.value = state.thirdPartyCount || '0';
                 if (state.playerAssignments && state.playerAssignments.length > 0) {
                     playerAssignments = state.playerAssignments;
+                    displayResults(playerAssignments);
+                    setupArea.style.display = 'none';
+                    resultArea.style.display = 'block';
                 }
             }
         }
@@ -108,9 +107,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         generateButton.addEventListener('click', () => {
-            if (typeof firebase === 'undefined') {
-                return alert('Firebaseが読み込まれていません。firebase-config.jsが正しく設定されているか確認してください。');
-            }
             const participants = participantsTextarea.value.split('\n').map(name => name.trim()).filter(Boolean);
             const villagerCount = parseInt(villagerCountInput.value) || 0;
             const werewolfCount = parseInt(werewolfCountInput.value) || 0;
@@ -124,27 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             playerAssignments = assignRoles(participants, rolesData, { villager: villagerCount, werewolf: werewolfCount, thirdParty: thirdPartyCount });
-            
-            const gameId = generateGameId();
-            const db = firebase.database();
-            db.ref('games/' + gameId).set({
-                participants: ['GM', ...participants],
-                votes: {},
-                chat: {}
-            }).then(() => {
-                displayResults(playerAssignments, gameId);
-                saveState();
-                setupArea.style.display = 'none';
-                resultArea.style.display = 'block';
-            }).catch(error => {
-                console.error("Firebase Error: ", error);
-                alert("ゲームの開始に失敗しました。Firebaseの設定（特にfirebase-config.jsとデータベースのルール）を確認してください。\n" + error.message);
-            });
+            displayResults(playerAssignments);
+            saveState();
+            setupArea.style.display = 'none';
+            resultArea.style.display = 'block';
         });
-
-        function generateGameId() {
-            return Math.random().toString(36).substr(2, 8);
-        }
 
         function assignRoles(participants, roles, counts) {
             const getRolesByTeam = (teamName, count) => {
@@ -181,26 +161,43 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        function displayResults(assignments, gameId) {
+        function displayResults(assignments) {
+            const data = encodeURIComponent(JSON.stringify(assignments));
+            const baseUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'player.html');
+            const shareUrl = `${baseUrl}?data=${data}`;
+
+            combinedOutput.value = `共有URL: ${shareUrl}\n\n` +
+                `各プレイヤーに以下の合言葉を伝えてください:\n` +
+                assignments.map(a => `${a.name}: ${a.password}`).join('\n');
+
+            // GM確認用リストをHTMLで生成
+            const gmList = document.createElement('ul');
+            gmList.style.listStyleType = 'none';
+            gmList.style.padding = '0';
+
             assignments.forEach(a => {
-                sessionStorage.setItem(`jinro-assignment-${a.password}`, JSON.stringify(a));
+                const listItem = document.createElement('li');
+                listItem.style.marginBottom = '15px';
+                listItem.style.padding = '10px';
+                listItem.style.border = '1px solid #95a5a6'; // 枠線の色を修正
+                listItem.style.borderRadius = '5px';
+                listItem.style.backgroundColor = '#2c3e50';
+                listItem.style.color = '#ecf0f1';
+
+                listItem.innerHTML = 
+                    `<strong>プレイヤー:</strong> ${a.name}<br>` +
+                    `<strong>役職:</strong> ${a.role} (${a.team})<br>` +
+                    `<strong>合言葉:</strong> ${a.password}<br>` +
+                    `<strong>占い結果:</strong> ${a.fortuneResult}<br>` +
+                    `<strong>能力:</strong> ${a.ability || 'なし'}<br>` +
+                    `<strong>勝利条件:</strong> ${a.winCondition || 'なし'}<br>` +
+                    `<strong>制作者:</strong> ${a.author || '不明'}`;
+                
+                gmList.appendChild(listItem);
             });
 
-            const playerUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}player.html`;
-            const voteUrlBase = `${window.location.origin}${window.location.pathname.replace('index.html', '')}vote.html`;
-            const gmVoteUrl = `${voteUrlBase}?gameId=${gameId}&name=GM`;
-
-            let output = `--- 役職確認 ---\n`;
-            output += `役職確認ページ: ${playerUrl}\n`;
-            output += assignments.map(a => `${a.name}さんの合言葉: ${a.password}`).join('\n');
-            output += `\n\n--- 投票ページ ---\n`;
-            output += `GM用: ${gmVoteUrl}\n`;
-            output += assignments.map(a => `${a.name}さん用: ${voteUrlBase}?gameId=${gameId}&name=${encodeURIComponent(a.name)}`).join('\n');
-
-            combinedOutput.value = output;
-
-            gmDetailedAssignments.innerText = 'GM確認用: 割り当て詳細一覧\n\n' +
-                assignments.map(a => `プレイヤー: ${a.name}, 役職: ${a.role}, 合言葉: ${a.password}`).join('\n');
+            gmDetailedAssignments.innerHTML = ''; // 中身をクリア
+            gmDetailedAssignments.appendChild(gmList);
         }
 
         copyAllButton.addEventListener('click', () => {
@@ -219,14 +216,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // player.html (役職確認ツール) 関連の処理
     // ====================================================================
     else if (revealButton) {
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const data = urlParams.get('data');
+            if (data) {
+                allAssignmentsData = JSON.parse(decodeURIComponent(data));
+            } else {
+                document.getElementById('password-input').placeholder = "有効なURLではありません";
+                document.getElementById('password-input').disabled = true;
+                revealButton.disabled = true;
+            }
+        } catch (e) {
+            console.error("役職データの読み込みに失敗しました:", e);
+            alert("役職データの読み込みに失敗しました。URLが正しいか確認してください。");
+            revealButton.disabled = true;
+        }
+
         revealButton.addEventListener('click', () => {
             const enteredPassword = passwordInput.value.trim();
             if (!enteredPassword) return alert('合言葉を入力してください。');
-            
-            const assignmentData = sessionStorage.getItem(`jinro-assignment-${enteredPassword}`);
+            if (!allAssignmentsData) return alert('役職データが読み込まれていません。');
 
-            if (assignmentData) {
-                const assignment = JSON.parse(assignmentData);
+            const assignment = allAssignmentsData.find(a => a.password === enteredPassword);
+
+            if (assignment) {
                 roleOutput.textContent = assignment.role;
                 teamOutput.textContent = assignment.team;
                 fortuneResultOutput.textContent = assignment.fortuneResult || '未設定';
@@ -235,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 authorOutput.textContent = assignment.author || '不明';
                 playerResultDisplay.style.display = 'block';
             } else {
-                alert('合言葉が間違っているか、有効なゲームデータがありません。');
+                alert('合言葉が間違っています。');
                 playerResultDisplay.style.display = 'none';
             }
         });

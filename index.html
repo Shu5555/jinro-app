@@ -37,25 +37,22 @@
 
     <div id="result-area" style="display:none;">
         <h2>4. 結果</h2>
-        <p>以下の共有URLをDiscordの全体チャンネルに投稿し、各プレイヤーに個別の合言葉をDMで伝えてください。</p>
+        <p>Discordの全体チャンネルに投稿してください。</p>
 
         <h3>共有情報 (これをコピーしてDiscordに貼り付け):</h3>
         <textarea id="combined-output" readonly style="width: 90%; height: 250px; font-size: 0.9em;"></textarea>
         <button id="copy-all-button">すべてコピー</button>
 
         <h3 style="margin-top: 30px;">GM確認用: 割り当て詳細一覧</h3>
-        <div id="gm-detailed-assignments" style="white-space: pre-wrap; background-color: #f8f8f8; padding: 15px; border-radius: 8px; border: 1px solid #eee; max-height: 300px; overflow-y: auto; font-size: 0.9em;">
+        <div id="gm-detailed-assignments">
             <!-- 詳細な割り当て情報がここに表示されます -->
         </div>
         <button id="reset-button" style="background-color: #dc3545; margin-top: 20px;">リセット</button>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="firebase-config.js"></script>
     <script src="script.js"></script>
     <footer>
-        <p>Created by shu5555 - Version 0.1.13</p>
+        <p>Created by shu5555 - Version 0.1.14</p>
     </footer>
 </body>
 </html>
