@@ -4,116 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ドキドキ役職人狼ゲーム - GMツール</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Mochiy+Pop+P+One&family=Noto+Sans+JP:wght@400;700&display=swap');
-
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f0f8ff 0%, #e0ffff 100%);
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        h1 {
-            font-family: 'Mochiy Pop P One', cursive;
-            color: #ff69b4; /* ホットピンク */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-
-        h2, h3 {
-            color: #4682b4; /* スチールブルー */
-            border-bottom: 2px solid #add8e6; /* ライトブルー */
-            padding-bottom: 5px;
-            margin-top: 25px;
-            font-family: 'Noto Sans JP', sans-serif;
-            font-weight: 700;
-        }
-
-        #setup-area, #result-area {
-            background-color: #ffffff;
-            border-radius: 15px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            padding: 30px;
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 800px;
-            box-sizing: border-box;
-        }
-
-        textarea, input[type="text"], input[type="number"] {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 2px solid #add8e6;
-            border-radius: 8px;
-            font-size: 1em;
-            box-sizing: border-box;
-        }
-
-        input[type="file"] {
-            margin-bottom: 15px;
-        }
-
-        .team-section {
-            border: 2px dashed #add8e6;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            background-color: #f8f8ff; /* ゴーストホワイト */
-        }
-
-        .team-section label {
-            display: block;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        button {
-            padding: 12px 25px;
-            background-color: #ff69b4; /* ホットピンク */
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.1em;
-            font-weight: bold;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #ff1493; /* ディープピンク */
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-        }
-
-        #combined-output {
-            width: calc(100% - 20px);
-            height: 250px;
-            font-size: 0.9em;
-            border: 2px solid #add8e6;
-            border-radius: 8px;
-            padding: 10px;
-            box-sizing: border-box;
-            background-color: #f0f8ff; /* アリスブルー */
-        }
-
-        #copy-all-button {
-            background-color: #4682b4; /* スチールブルー */
-        }
-
-        #copy-all-button:hover {
-            background-color: #36648b; /* ダークスチールブルー */
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
@@ -160,5 +51,8 @@
     </div>
 
     <script src="script.js"></script>
+    <footer>
+        <p>Created by shu5555 - Version 0.1.13</p>
+    </footer>
 </body>
 </html>

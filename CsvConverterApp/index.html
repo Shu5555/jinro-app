@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人狼役職CSV変換ツール</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        h1, h2 { color: #333; }
+        textarea { width: 90%; height: 150px; margin-bottom: 1em; }
+        button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        button:hover { background-color: #0056b3; }
+        #output-area { margin-top: 2em; border: 1px solid #ccc; padding: 1em; border-radius: 8px; }
+        #download-link { display: inline-block; margin-top: 1em; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; }
+        #download-link:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+    <h1>人狼役職CSV変換ツール</h1>
+
+    <p>Googleフォームから出力されたCSVファイルを選択してください。</p>
+    <input type="file" id="input-csv-file" accept=".csv">
+    <button id="convert-button">CSVを変換</button>
+
+    <div id="output-area" style="display:none;">
+        <h2>変換結果CSV</h2>
+        <textarea id="output-csv-text" readonly></textarea>
+        <a id="download-link" href="#" download="roles_converted.csv">変換済みCSVをダウンロード</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

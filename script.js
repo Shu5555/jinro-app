@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const abilityOutput = document.getElementById('ability-output');
     const winConditionOutput = document.getElementById('win-condition-output');
     const fortuneResultOutput = document.getElementById('fortune-result-output'); // player.htmlの占い結果表示用
+    const authorOutput = document.getElementById('author-output'); // player.htmlの制作者表示用
 
     let rolesData = [];
     let playerAssignments = [];
@@ -100,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (lines.length < 2) return [];
             const headers = lines[0].split(',').map(h => h.trim());
             return lines.slice(1).map(line => {
-                const values = line.split(',').map(v => v.trim());
+                const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, '')); // クォーテーションを削除
                 const role = {};
                 headers.forEach((header, index) => {
                     role[header] = values[index];
@@ -157,6 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     team: role['陣営'],
                     ability: role['能力'],
                     winCondition: role['勝利条件'],
+                    author: role['制作者'] || '不明',
                     // CSVに「占い結果」列があればそれを使い、なければ陣営から判断する
                     fortuneResult: role['占い結果'] || (role['陣営'] === '人狼陣営' ? '人狼' : '人狼ではない'),
                     password: generateUniquePassword()
@@ -165,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function displayResults(assignments) {
-            // 全プレイヤーの役職情報をエンコードしてURLに含める (btoaを廃止し、よりシンプルな方式に変更)
+            // 全プレイヤーの役職情報をエンコードしてURLに含める
             const data = encodeURIComponent(JSON.stringify(assignments));
             const baseUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, 'player.html');
             const shareUrl = `${baseUrl}?data=${data}`;
@@ -181,7 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     `合言葉: ${a.password}\n` +
                     `占い結果: ${a.fortuneResult}\n` +
                     `能力: ${a.ability || 'なし'}\n` +
-                    `勝利条件: ${a.winCondition || 'なし'}`
+                    `勝利条件: ${a.winCondition || 'なし'}\n` +
+                    `制作者: ${a.author || '不明'}`
                 ).join('\n\n');
         }
 
@@ -221,10 +224,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             const data = urlParams.get('data');
             if (data) {
-                // デコード処理をシンプル化
+                // デコード処理
                 allAssignmentsData = JSON.parse(decodeURIComponent(data));
             } else {
-                 // データがない場合、入力エリアを無効化するなどしても良い
+                 // データがない場合、入力エリアを無効化
                 document.getElementById('password-input').placeholder = "有効なURLではありません";
                 document.getElementById('password-input').disabled = true;
                 revealButton.disabled = true;
@@ -248,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fortuneResultOutput.textContent = assignment.fortuneResult || '未設定';
                 abilityOutput.textContent = assignment.ability || 'なし';
                 winConditionOutput.textContent = assignment.winCondition || 'なし';
+                authorOutput.textContent = assignment.author || '不明'; // 制作者情報を表示
                 playerResultDisplay.style.display = 'block';
             } else {
                 alert('合言葉が間違っています。');
