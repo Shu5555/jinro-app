@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>人狼役職CSV変換ツール</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         body { font-family: sans-serif; margin: 2em; }
         h1, h2 { color: #333; }
@@ -29,6 +30,202 @@
         <a id="download-link" href="#" download="roles_converted.csv">変換済みCSVをダウンロード</a>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const inputCsvFile = document.getElementById('input-csv-file');
+            const convertButton = document.getElementById('convert-button');
+            const outputCsvText = document.getElementById('output-csv-text');
+            const downloadLink = document.getElementById('download-link');
+            const outputArea = document.getElementById('output-area');
+
+            convertButton.addEventListener('click', () => {
+                const file = inputCsvFile.files[0];
+                if (!file) {
+                    alert('CSVファイルを選択してください。');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result;
+                    try {
+                        const convertedCsv = convertCsv(text);
+                        outputCsvText.value = convertedCsv;
+                        const blob = new Blob([convertedCsv], { type: 'text/csv;charset=utf-8;' });
+                        downloadLink.href = URL.createObjectURL(blob);
+                        outputArea.style.display = 'block';
+                    } catch (error) {
+                        alert('CSVの変換中にエラーが発生しました: ' + error.message);
+                        console.error('変換エラー:', error);
+                        outputArea.style.display = 'none';
+                    }
+                };
+                reader.readAsText(file);
+            });
+        });
+
+        function convertCsv(csvText) {
+            // PapaParseを使用してCSVを解析
+            const parseResult = Papa.parse(csvText, {
+                header: false,
+                skipEmptyLines: true,
+                dynamicTyping: false
+            });
+
+            if (parseResult.errors.length > 0) {
+                console.warn('CSV解析警告:', parseResult.errors);
+            }
+
+            const data = parseResult.data;
+            if (data.length < 2) {
+                throw new Error('CSVファイルにはヘッダー行と少なくとも1行のデータが必要です。');
+            }
+
+            const headers = data[0].map(h => (h || '').toString().trim());
+            console.log('読み込まれたヘッダー:', headers);
+            
+            const rolesData = {}; // 役職名 -> { team, ability, winCondition, author } のマップ
+
+            // ヘッダーから各項目のインデックスをマッピング
+            const fieldMap = {
+                werewolf: { name: [], ability: [], fortune: [] },    // 1-, 2- から始まる
+                villager: { name: [], ability: [], fortune: [] },    // 3-, 4- から始まる
+                thirdParty: { name: [], ability: [], winCondition: [], fortune: [] } // 5- から始まる
+            };
+            let authorIndex = -1;
+
+            headers.forEach((header, index) => {
+                console.log(`ヘッダー ${index}: "${header}"`);
+                
+                if (header === '名前') {
+                    authorIndex = index;
+                } else if (header.match(/^(\d+)-(\d+)(.+)$/)) {
+                    const match = header.match(/^(\d+)-(\d+)(.+)$/);
+                    const prefix = match[1];
+                    const fieldType = match[2];
+                    const fieldName = match[3];
+                    
+                    console.log(`マッチした項目: prefix=${prefix}, fieldType=${fieldType}, fieldName=${fieldName}`);
+                    
+                    // 陣営の判定
+                    let team;
+                    if (prefix === '1' || prefix === '2') {
+                        team = 'werewolf'; // 人狼陣営
+                    } else if (prefix === '3' || prefix === '4') {
+                        team = 'villager'; // 村人陣営
+                    } else if (prefix === '5') {
+                        team = 'thirdParty'; // 第三陣営
+                    } else {
+                        console.warn(`未知のプレフィックス: ${prefix}`);
+                        return;
+                    }
+                    
+                    // フィールドタイプの判定
+                    if (fieldType === '1' && fieldName === '役職名') {
+                        fieldMap[team].name.push(index);
+                        console.log(`${team}の役職名インデックス追加: ${index}`);
+                    } else if (fieldType === '2' && fieldName === '能力') {
+                        fieldMap[team].ability.push(index);
+                        console.log(`${team}の能力インデックス追加: ${index}`);
+                    } else if (fieldType === '3' && fieldName === '勝利条件') {
+                        if (team === 'thirdParty') {
+                            fieldMap[team].winCondition.push(index);
+                            console.log(`${team}の勝利条件インデックス追加: ${index}`);
+                        }
+                    } else if ((fieldType === '3' || fieldType === '4') && fieldName === '占い') {
+                        fieldMap[team].fortune.push(index);
+                        console.log(`${team}の占い結果インデックス追加: ${index}`);
+                    }
+                }
+            });
+
+            if (authorIndex === -1) {
+                throw new Error('CSVファイルに「名前」ヘッダーが見つかりません。');
+            }
+
+            console.log('フィールドマップ:', fieldMap);
+
+            // データ行を処理
+            for (let i = 1; i < data.length; i++) {
+                const cols = data[i].map(col => (col || '').toString().trim());
+                const author = cols[authorIndex] || '';
+                
+                console.log(`行 ${i} を処理中:`, cols);
+
+                // 人狼陣営の処理
+                fieldMap.werewolf.name.forEach((nameIdx, j) => {
+                    const roleName = cols[nameIdx];
+                    if (roleName && !rolesData[roleName]) {
+                        const ability = fieldMap.werewolf.ability[j] ? (cols[fieldMap.werewolf.ability[j]] || '') : '';
+                        const fortuneResult = fieldMap.werewolf.fortune[j] ? (cols[fieldMap.werewolf.fortune[j]] || '人狼') : '人狼';
+                        
+                        rolesData[roleName] = {
+                            team: '人狼陣営',
+                            ability: ability,
+                            winCondition: '人狼陣営以外を全員殺害すること。',
+                            author: author
+                        };
+                        console.log(`人狼陣営の役職追加: ${roleName}`);
+                    }
+                });
+
+                // 村人陣営の処理
+                fieldMap.villager.name.forEach((nameIdx, j) => {
+                    const roleName = cols[nameIdx];
+                    if (roleName && !rolesData[roleName]) {
+                        const ability = fieldMap.villager.ability[j] ? (cols[fieldMap.villager.ability[j]] || '') : '';
+                        const fortuneResult = fieldMap.villager.fortune[j] ? (cols[fieldMap.villager.fortune[j]] || '人狼ではない') : '人狼ではない';
+                        
+                        rolesData[roleName] = {
+                            team: '村人陣営',
+                            ability: ability,
+                            winCondition: '人狼陣営を殺害すること。',
+                            author: author
+                        };
+                        console.log(`村人陣営の役職追加: ${roleName}`);
+                    }
+                });
+
+                // 第三陣営の処理
+                fieldMap.thirdParty.name.forEach((nameIdx, j) => {
+                    const roleName = cols[nameIdx];
+                    if (roleName && !rolesData[roleName]) {
+                        const ability = fieldMap.thirdParty.ability[j] ? (cols[fieldMap.thirdParty.ability[j]] || '') : '';
+                        const winCondition = fieldMap.thirdParty.winCondition[j] ? (cols[fieldMap.thirdParty.winCondition[j]] || '') : '';
+                        const fortuneResult = fieldMap.thirdParty.fortune[j] ? (cols[fieldMap.thirdParty.fortune[j]] || '人狼ではない') : '人狼ではない';
+                        
+                        rolesData[roleName] = {
+                            team: '第三陣営',
+                            ability: ability,
+                            winCondition: winCondition || 'ゲーム終了時、生存で単独勝利。',
+                            author: author
+                        };
+                        console.log(`第三陣営の役職追加: ${roleName}`);
+                    }
+                });
+            }
+
+            console.log('変換された役職データ:', rolesData);
+
+            // 変換済みCSVのヘッダー
+            let convertedCsv = '役職名,陣営,能力,勝利条件,制作者\n';
+
+            // 役職データをCSV形式に変換
+            for (const roleName in rolesData) {
+                const data = rolesData[roleName];
+                const csvLine = [
+                    `"${roleName.replace(/"/g, '""')}"`,
+                    `"${data.team.replace(/"/g, '""')}"`,
+                    `"${data.ability.replace(/"/g, '""')}"`,
+                    `"${data.winCondition.replace(/"/g, '""')}"`,
+                    `"${data.author.replace(/"/g, '""')}"`
+                ].join(',');
+                convertedCsv += csvLine + '\n';
+            }
+
+            console.log('変換済みCSV:', convertedCsv);
+            return convertedCsv;
+        }
+    </script>
 </body>
 </html>

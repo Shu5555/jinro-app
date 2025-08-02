@@ -251,11 +251,6 @@ button:hover, .button:hover {
     width: 100%;
 }
 
-.player-card-details {
-    margin-top: 10px;
-    text-align: left;
-}
-
 /* ゲーム進行状況メーカー */
 .player-status-list-container {
     display: flex;
@@ -477,4 +472,22 @@ footer nav a:hover {
         align-self: center;
         margin-top: 10px;
     }
+}
+
+/* style.cssに追加するスタイル */
+
+/* 能力と勝利条件の改行を適切に表示するためのスタイル */
+#ability-output, #win-condition-output {
+    white-space: pre-wrap; /* 改行とスペースを保持 */
+    word-wrap: break-word; /* 長い単語を適切に改行 */
+    line-height: 1.6; /* 読みやすい行間 */
+}
+
+/* GM確認用カードの詳細部分も同様に */
+.player-card-details {
+    margin-top: 10px;
+    text-align: left;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
 }
