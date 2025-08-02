@@ -1,5 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Noto+Sans+JP:wght@400;700&display=swap');
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: 'Noto Sans JP', sans-serif;
     margin: 0;
@@ -9,7 +13,18 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
     min-height: 100vh;
+    width: 100%;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 auto;
 }
 
 h1 {
@@ -20,6 +35,7 @@ h1 {
     font-size: 4em;
     letter-spacing: 3px;
     text-align: center;
+    width: 100%;
 }
 
 h2, h3 {
@@ -29,28 +45,75 @@ h2, h3 {
     margin-top: 25px;
     font-family: 'Noto Sans JP', sans-serif;
     font-weight: 700;
+    text-align: center;
+    width: 100%;
 }
 
-#setup-area, #result-area {
+p {
+    text-align: center;
+    width: 100%;
+}
+
+/* メインセクションのスタイル */
+#setup-area, #result-area, #game-progress-area, #input-area,
+#player-lottery-section, #coin-toss-section {
     background-color: #34495e; /* Wet Asphalt */
     border-radius: 8px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 10px rgba(231, 76, 60, 0.2); /* Red glow */
     padding: 30px;
-    margin-bottom: 30px;
+    margin: 0 auto 30px auto;
     width: 100%;
     max-width: 800px;
-    box-sizing: border-box;
     border: 1px solid #2c3e50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
+#result-display {
+    background-color: #34495e;
+    border-radius: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 10px rgba(231, 76, 60, 0.2);
+    padding: 30px;
+    margin: 30px auto 0 auto;
+    width: 100%;
+    max-width: 600px;
+    border: 1px solid #2c3e50;
+    display: none;
+    text-align: left;
+}
+
+#result-display h2 {
+    text-align: center;
+    border-bottom: 1px solid #e74c3c;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#role-output {
+    font-family: 'Creepster', cursive;
+    font-size: 3em;
+    color: #e74c3c;
+    text-align: center;
+    margin-bottom: 1em;
+    width: 100%;
+}
+
+#result-display p {
+    font-size: 1.1em;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+/* フォーム要素 */
 textarea, input[type="text"], input[type="number"] {
-    width: calc(100% - 22px);
+    width: 100%;
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #2c3e50;
     border-radius: 5px;
     font-size: 1em;
-    box-sizing: border-box;
     background-color: #2c3e50;
     color: #ecf0f1;
 }
@@ -58,23 +121,36 @@ textarea, input[type="text"], input[type="number"] {
 input[type="file"] {
     margin-bottom: 15px;
     color: #ecf0f1;
+    width: 100%;
 }
 
-.team-section {
+select {
+    padding: 10px;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    border: 1px solid #2c3e50;
+    border-radius: 5px;
+}
+
+/* チームセクションとプログレスセクション */
+.team-section, .progress-section {
     border: 1px dashed #2c3e50;
     padding: 15px;
     margin-bottom: 20px;
     border-radius: 5px;
     background-color: #283747;
+    width: 100%;
 }
 
-.team-section label {
+.team-section label, .progress-section label {
     display: block;
     margin-top: 10px;
     font-weight: bold;
+    text-align: left;
 }
 
-button {
+/* ボタンスタイル */
+button, .button {
     padding: 12px 25px;
     background-color: #e74c3c; /* Alizarin */
     color: white;
@@ -85,150 +161,320 @@ button {
     font-weight: bold;
     box-shadow: 0 4px 8px rgba(0,0,0,0.4);
     transition: all 0.3s ease;
-    margin-top: 10px;
+    margin: 10px auto;
+    display: block;
+    text-align: center;
+    min-width: 150px;
 }
 
-button:hover {
+button:hover, .button:hover {
     background-color: #c0392b; /* Pomegranate */
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(0,0,0,0.5);
 }
 
-#combined-output {
-    width: calc(100% - 22px);
+/* 特定のボタンスタイル */
+#copy-all-button, #copy-progress-button { 
+    background-color: #95a5a6; 
+}
+
+#copy-all-button:hover, #copy-progress-button:hover { 
+    background-color: #7f8c8d; 
+}
+
+#reset-button { 
+    background-color: #c0392b; 
+}
+
+#reset-button:hover { 
+    background-color: #e74c3c; 
+}
+
+#generate-progress-button { 
+    background-color: #f39c12; 
+}
+
+#generate-progress-button:hover { 
+    background-color: #e67e22; 
+}
+
+#reveal-button { 
+    background-color: #27ae60; 
+}
+
+#reveal-button:hover { 
+    background-color: #2ecc71; 
+}
+
+/* テキストエリア */
+#combined-output, #progress-output {
+    width: 100%;
     height: 250px;
     font-size: 0.9em;
     border: 1px solid #2c3e50;
     border-radius: 5px;
     padding: 10px;
-    box-sizing: border-box;
     background-color: #2c3e50;
     color: #ecf0f1;
+    resize: vertical;
 }
 
-#copy-all-button {
-    background-color: #95a5a6; /* Concrete */
+#progress-output { 
+    height: 200px; 
 }
 
-#copy-all-button:hover {
-    background-color: #7f8c8d; /* Asbestos */
-}
-
-#reset-button {
-    background-color: #c0392b;
-}
-
-#reset-button:hover {
-    background-color: #e74c3c;
-}
-
-#gm-detailed-assignments {
-    white-space: pre-wrap; 
-    background-color: #2c3e50; 
-    padding: 15px; 
-    border-radius: 5px; 
-    border: 1px solid #34495e; 
-    max-height: 300px; 
-    overflow-y: auto; 
-    font-size: 0.9em;
-    color: #bdc3c7; /* Silver */
-}
-
-/* player.html specific styles */
-#reveal-button {
-    background-color: #27ae60; /* Nephritis */
-}
-
-#reveal-button:hover {
-    background-color: #2ecc71; /* Emerald */
-}
-
-#result-display {
-    margin-top: 30px;
-    padding: 30px;
-    background-color: #34495e; /* Wet Asphalt */
-    border-radius: 8px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3), 0 0 10px rgba(231, 76, 60, 0.2); /* Red glow */
-    display: none; /* Initially hidden */
-    max-width: 600px;
+/* GM確認用カード */
+.player-card-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     width: 100%;
-    box-sizing: border-box;
-    border: 1px solid #2c3e50;
+    align-items: center;
+}
+
+.player-card {
+    padding: 15px;
+    border: 1px solid #95a5a6;
+    border-radius: 8px;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    font-size: 14px;
+    line-height: 1.6;
+    width: 100%;
+    max-width: 100%;
+}
+
+.player-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    width: 100%;
+}
+
+.player-card-details {
+    margin-top: 10px;
     text-align: left;
 }
 
-#result-display h2 {
-    color: #ecf0f1; /* Clouds */
-    border-bottom: 1px solid #e74c3c;
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    font-family: 'Noto Sans JP', sans-serif;
-    font-weight: 700;
+/* ゲーム進行状況メーカー */
+.player-status-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
 }
 
-#role-output {
-    font-family: 'Creepster', cursive;
-    font-size: 3em;
+.player-status-item {
+    padding: 10px;
+    background-color: #34495e;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    border: 1px solid #95a5a6;
+    width: 100%;
+}
+
+.player-name {
     font-weight: bold;
-    color: #e74c3c; /* Alizarin */
-    margin-bottom: 1em;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    text-align: center;
-}
-
-#result-display p {
-    font-size: 1.1em;
-    line-height: 1.6;
-    margin-bottom: 10px;
-}
-
-#result-display strong {
     color: #ecf0f1;
 }
 
+.status-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.status-btn {
+    padding: 5px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #7f8c8d;
+    color: white;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+    margin: 0;
+}
+
+.status-btn.selected {
+    opacity: 1;
+    font-weight: bold;
+}
+
+.status-btn.alive.selected { 
+    background-color: #27ae60; 
+}
+
+.status-btn.dead.selected { 
+    background-color: #e74c3c; 
+}
+
+.toggle-button {
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    background-color: #95a5a6;
+    color: white;
+    border: none;
+    font-size: 14px;
+    margin: 0;
+    display: inline-block;
+}
+
+.toggle-button.enabled { 
+    background-color: #27ae60; 
+}
+
+#progress-preview {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #283747;
+    border-radius: 5px;
+    border: 1px solid #34495e;
+    width: 100%;
+}
+
+/* random.html用 */
+.result-display-area {
+    margin-top: 15px;
+    padding: 15px;
+    background-color: #283747;
+    border-radius: 5px;
+    border: 1px solid #34495e;
+    width: 100%;
+    text-align: center;
+}
+
+.result-display-area h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    border-bottom: 1px solid #e74c3c;
+    padding-bottom: 10px;
+}
+
+.result-display-area p {
+    text-align: center;
+    font-size: 1.2em;
+    margin: 0;
+}
+
+/* プレイヤー選択リスト */
+#player-selection-list {
+    text-align: left;
+}
+
+#player-selection-list label {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    cursor: pointer;
+}
+
+#player-selection-list input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    margin-bottom: 0;
+}
+
+/* フッター */
 footer {
     margin-top: 40px;
     padding: 20px;
     text-align: center;
-    color: #7f8c8d; /* Asbestos */
+    color: #7f8c8d;
     font-size: 0.9em;
+    width: 100%;
+    max-width: 800px;
 }
 
 footer p {
     margin: 0;
 }
 
+footer nav {
+    margin-top: 10px;
+}
+
+footer nav a {
+    color: #ecf0f1;
+    text-decoration: none;
+    margin: 0 15px;
+    transition: color 0.3s ease;
+}
+
+footer nav a:hover {
+    color: #e74c3c;
+    text-decoration: underline;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    h1 {
-        font-size: 3em;
+    body {
+        padding: 15px;
     }
-
-    #setup-area, #result-area, #result-display {
+    
+    h1 { 
+        font-size: 3em; 
+    }
+    
+    #setup-area, #result-area, #result-display, #game-progress-area,
+    #input-area, #player-lottery-section, #coin-toss-section {
         padding: 20px;
+    }
+    
+    .player-status-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .status-buttons {
+        align-self: center;
     }
 }
 
 @media (max-width: 480px) {
-    body {
-        padding: 10px;
+    body { 
+        padding: 10px; 
     }
-
-    h1 {
-        font-size: 2.5em;
-        letter-spacing: 2px;
+    
+    h1 { 
+        font-size: 2.5em; 
+        letter-spacing: 1px;
     }
-
-    #setup-area, #result-area, #result-display {
+    
+    #setup-area, #result-area, #result-display, #game-progress-area,
+    #input-area, #player-lottery-section, #coin-toss-section {
         padding: 15px;
     }
-
-    button {
+    
+    button, .button {
         padding: 10px 20px;
         font-size: 1em;
+        min-width: 120px;
     }
-
+    
     #role-output {
         font-size: 2em;
+    }
+    
+    .player-card-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .player-status-item {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .status-buttons {
+        align-self: center;
+        margin-top: 10px;
     }
 }

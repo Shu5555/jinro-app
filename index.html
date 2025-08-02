@@ -6,53 +6,94 @@
     <title>ドキドキ役職人狼ゲーム - GMツール</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body id="gm-tool-page">
 
-    <h1>ドキドキ役職人狼ゲーム - GMツール</h1>
+    <div class="container">
+        <h1>ドキドキ役職人狼ゲーム - GMツール</h1>
 
-    <div id="setup-area">
-        <h2>1. 参加者リスト</h2>
-        <textarea id="participants" placeholder="参加者の名前を1行に1人ずつ入力してください" rows="10"></textarea>
+        <div id="setup-area">
+            <h2>1. 参加者リスト</h2>
+            <textarea id="participants" placeholder="参加者の名前を1行に1人ずつ入力してください" rows="10"></textarea>
 
-        <h2>2. 人数設定</h2>
-        <input type="file" id="csv-file-input" accept=".csv">
+            <h2>2. 人数設定</h2>
+            <input type="file" id="csv-file-input" accept=".csv">
 
-        <div class="team-section">
-            <h3>村人陣営</h3>
-            <label>人数: <input type="number" id="villager-count" value="0"></label>
+            <div class="team-section">
+                <h3>村人陣営</h3>
+                <label>人数: <input type="number" id="villager-count" value="0"></label>
+            </div>
+
+            <div class="team-section">
+                <h3>人狼陣営</h3>
+                <label>人数: <input type="number" id="werewolf-count" value="0"></label>
+            </div>
+
+            <div class="team-section">
+                <h3>第三陣営</h3>
+                <label>人数: <input type="number" id="third-party-count" value="0"></label>
+            </div>
+
+            <button id="generate-button">役職抽選へ</button>
         </div>
 
-        <div class="team-section">
-            <h3>人狼陣営</h3>
-            <label>人数: <input type="number" id="werewolf-count" value="0"></label>
+        <div id="result-area" style="display:none;">
+            <h2>4. 結果</h2>
+            <p>Discordの全体チャンネルに投稿してください。</p>
+
+            <h3>共有情報:</h3>
+            <textarea id="combined-output" readonly></textarea>
+            <button id="copy-all-button">共有情報をコピー</button>
+
+            <h3 style="margin-top: 30px;">GM確認用: 割り当て詳細一覧</h3>
+            <div id="gm-detailed-assignments">
+                <!-- 詳細な割り当て情報がここに表示されます -->
+            </div>
+            <button id="reset-button" style="background-color: #dc3545; margin-top: 20px;">リセット</button>
         </div>
 
-        <div class="team-section">
-            <h3>第三陣営</h3>
-            <label>人数: <input type="number" id="third-party-count" value="0"></label>
-        </div>
+        <!-- ゲーム進行状況メーカー -->
+        <div id="game-progress-area" style="display:none;">
+            <h2>ゲーム進行状況メーカー</h2>
+            
+            <div class="progress-section">
+                <h3>表示設定</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <span>各陣営の人数を記載:</span>
+                        <button type="button" id="team-count-toggle" class="toggle-button" data-enabled="false">しない</button>
+                    </label>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: flex; align-items: center; gap: 10px;">
+                        <span>役職名を記載:</span>
+                        <button type="button" id="role-name-toggle" class="toggle-button" data-enabled="false">しない</button>
+                    </label>
+                </div>
+                <label>経過日数: <input type="number" id="game-days" value="1" min="1"></label>
+            </div>
 
-        <button id="generate-button">役職抽選へ</button>
+            <div class="progress-section">
+                <h3>プレイヤー生死状況</h3>
+                <div id="player-status-list">
+                    <!-- プレイヤーの生死ボタンがここに動的生成されます -->
+                </div>
+            </div>
+
+            <button id="generate-progress-button">コピペ生成</button>
+            
+            <div id="progress-preview" style="display:none;">
+                <h3>プレビュー</h3>
+                <textarea id="progress-output" readonly style="width: 90%; height: 200px; font-size: 0.9em;"></textarea>
+                <button id="copy-progress-button">コピーする</button>
+            </div>
+        </div>
     </div>
 
-    <div id="result-area" style="display:none;">
-        <h2>4. 結果</h2>
-        <p>Discordの全体チャンネルに投稿してください。</p>
-
-        <h3>共有情報 (これをコピーしてDiscordに貼り付け):</h3>
-        <textarea id="combined-output" readonly style="width: 90%; height: 250px; font-size: 0.9em;"></textarea>
-        <button id="copy-all-button">すべてコピー</button>
-
-        <h3 style="margin-top: 30px;">GM確認用: 割り当て詳細一覧</h3>
-        <div id="gm-detailed-assignments">
-            <!-- 詳細な割り当て情報がここに表示されます -->
-        </div>
-        <button id="reset-button" style="background-color: #dc3545; margin-top: 20px;">リセット</button>
-    </div>
-
+    <script src="config.js"></script>
     <script src="script.js"></script>
+    
     <footer>
-        <p>Created by shu5555 - Version 0.1.14</p>
+        <p>Created by shu5555 - Version 0.2.0</p>
     </footer>
 </body>
 </html>

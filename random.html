@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ランダムツール</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="random-tools-page">
+
+    <div class="container">
+        <h1>ランダムツール</h1>
+
+        <!-- プレイヤー抽選セクション -->
+        <div id="player-lottery-section">
+            <h2>プレイヤー抽選</h2>
+            <p>プレイヤーリストを入力し、抽選対象と選出人数を指定してランダムに選びます。</p>
+            
+            <div class="team-section">
+                <label for="player-list-input">プレイヤーリスト（1行に1人ずつ）</label>
+                <textarea id="player-list-input" placeholder="例:
+プレイヤーA
+プレイヤーB
+プレイヤーC" rows="8"></textarea>
+            </div>
+
+            <div id="player-selection-container" class="team-section" style="display: none;">
+                <label>抽選対象のプレイヤー</label>
+                <div id="player-selection-list"></div>
+            </div>
+
+            <div class="progress-section">
+                <label for="num-to-select">選出する人数:</label>
+                <input type="number" id="num-to-select" value="1" min="1" style="width: 80px; margin-right: 10px;">
+                <button id="execute-lottery">抽選実行</button>
+            </div>
+
+            <div id="lottery-result" class="result-display-area" style="display: none;">
+                <h3>抽選結果</h3>
+                <p id="lottery-result-text"></p>
+            </div>
+        </div>
+
+        <!-- コイントスセクション -->
+        <div id="coin-toss-section">
+            <h2>コイントス</h2>
+            <p>表が出る確率を指定して、コイントスを実行します。</p>
+
+            <div class="progress-section">
+                <label for="probability-input">確率:</label>
+                <input type="text" id="probability-input" value="50" style="width: 100px; margin-right: 10px;">
+                <select id="probability-type" style="padding: 10px;">
+                    <option value="percent">% (パーセント)</option>
+                    <option value="fraction">分数 (例: 1/2)</option>
+                </select>
+                <button id="execute-coin-toss" style="margin-left: 10px;">コイントス実行</button>
+            </div>
+
+            <div id="coin-toss-result" class="result-display-area" style="display: none;">
+                <h3>コイントス結果</h3>
+                <p id="coin-toss-result-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+    
+    <footer>
+        <p>Created by shu5555 - Version 0.2.0</p>
+    </footer>
+</body>
+</html>

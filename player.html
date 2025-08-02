@@ -6,30 +6,33 @@
     <title>ドキドキ役職人狼ゲーム - 役職確認</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body id="player-page">
 
-    <h1>ドキドキ役職人狼ゲーム - 役職確認</h1>
-    <p>DMで届いた「合言葉」を入力してください。</p>
+    <div class="container">
+        <h1>ドキドキ役職人狼ゲーム - 役職確認</h1>
+        <p>DMで届いた「合言葉」を入力してください。</p>
 
-    <div>
-        <input type="text" id="password-input" placeholder="ここに合言葉を入力">
+        <div id="input-area">
+            <input type="text" id="password-input" placeholder="ここに合言葉を入力" style="background-color: #ecf0f1; color: #2c3e50; border: 2px solid #3498db;">
+            <button id="reveal-button">役職を確認する</button>
+        </div>
+
+        <div id="result-display" style="display:none;">
+            <h2>あなたの役職は...</h2>
+            <p id="role-output" style="font-size: 1.8em; font-weight: bold; color: #dc3545; margin-bottom: 1em;"></p>
+            <p><strong>陣営:</strong> <span id="team-output"></span></p>
+            <p><strong>占い結果:</strong> <span id="fortune-result-output"></span></p>
+            <p><strong>能力:</strong> <span id="ability-output"></span></p>
+            <p><strong>勝利条件:</strong> <span id="win-condition-output"></span></p>
+            <p><strong>制作者:</strong> <span id="author-output"></span></p>
+        </div>
     </div>
-    
-    <button id="reveal-button">役職を確認する</button>
 
-    <div id="result-display" style="display:none;">
-        <h2>あなたの役職は...</h2>
-        <p id="role-output" style="font-size: 1.8em; font-weight: bold; color: #dc3545; margin-bottom: 1em;"></p>
-        <p><strong>陣営:</strong> <span id="team-output"></span></p>
-        <p><strong>占い結果:</strong> <span id="fortune-result-output"></span></p>
-        <p><strong>能力:</strong> <span id="ability-output"></span></p>
-        <p><strong>勝利条件:</strong> <span id="win-condition-output"></span></p>
-        <p><strong>制作者:</strong> <span id="author-output"></span></p>
-    </div>
-
+    <script src="config.js"></script>
     <script src="script.js"></script>
+    
     <footer>
-        <p>Created by shu5555 - Version 0.1.13</p>
+        <p>Created by shu5555 - Version 0.2.0</p>
     </footer>
 </body>
 </html>
