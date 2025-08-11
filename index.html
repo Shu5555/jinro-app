@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ドキドキ役職人狼ゲーム - GMツール</title>
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body id="gm-tool-page">
@@ -16,21 +17,24 @@
             <textarea id="participants" placeholder="参加者の名前を1行に1人ずつ入力してください" rows="10"></textarea>
 
             <h2>2. 人数設定</h2>
-            <input type="file" id="csv-file-input" accept=".csv">
 
             <div class="team-section">
                 <h3>村人陣営</h3>
-                <label>人数: <input type="number" id="villager-count" value="0"></label>
+                <label>占い師系: <input type="number" id="fortune-teller-count" value="1" min="0"></label>
+                <label>霊媒師系: <input type="number" id="medium-count" value="0" min="0"></label>
+                <label>騎士系: <input type="number" id="knight-count" value="0" min="0"></label>
+                <label>一般: <input type="number" id="villager-count" value="0" min="0"></label>
             </div>
 
             <div class="team-section">
                 <h3>人狼陣営</h3>
-                <label>人数: <input type="number" id="werewolf-count" value="0"></label>
+                <label>人狼: <input type="number" id="werewolf-count" value="0" min="0"></label>
+                <label>狂人: <input type="number" id="madman-count" value="0" min="0"></label>
             </div>
 
             <div class="team-section">
                 <h3>第三陣営</h3>
-                <label>人数: <input type="number" id="third-party-count" value="0"></label>
+                <label>人数: <input type="number" id="third-party-count" value="0" min="0"></label>
             </div>
 
             <button id="generate-button">役職抽選へ</button>

@@ -91,128 +91,7 @@ function simpleDecrypt(encryptedText, key = 'jinro2024') {
 }
 
 // 改良されたCSV解析関数（改行対応）
-function parseCSV(text) {
-    console.log('CSV解析開始 - 元データ（最初の500文字）:', text.substring(0, 500));
-    
-    // 改行コードを統一
-    const normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
-    const rows = [];
-    let currentRow = [];
-    let currentField = '';
-    let inQuotes = false;
-    let i = 0;
-    
-    while (i < normalizedText.length) {
-        const char = normalizedText[i];
-        const nextChar = normalizedText[i + 1];
-        
-        if (char === '"') {
-            if (inQuotes && nextChar === '"') {
-                // エスケープされたクォート（""）
-                currentField += '"';
-                i += 2;
-            } else {
-                // クォートの開始または終了
-                inQuotes = !inQuotes;
-                i++;
-            }
-        } else if (char === ',' && !inQuotes) {
-            // フィールドの区切り
-            currentRow.push(currentField.trim());
-            currentField = '';
-            i++;
-        } else if (char === '\n' && !inQuotes) {
-            // 行の終了
-            currentRow.push(currentField.trim());
-            if (currentRow.some(field => field !== '')) {
-                rows.push(currentRow);
-            }
-            currentRow = [];
-            currentField = '';
-            i++;
-        } else {
-            // 通常の文字（クォート内の改行も含む）
-            currentField += char;
-            i++;
-        }
-    }
-    
-    // 最後の行を処理
-    if (currentField !== '' || currentRow.length > 0) {
-        currentRow.push(currentField.trim());
-        if (currentRow.some(field => field !== '')) {
-            rows.push(currentRow);
-        }
-    }
-    
-    console.log('解析された行数:', rows.length);
-    console.log('最初の数行:', rows.slice(0, 3));
-    
-    if (rows.length < 2) {
-        console.warn('CSVデータが不十分です（ヘッダー行+データ行が必要）');
-        return [];
-    }
-    
-    // ヘッダー行を取得
-    const headers = rows[0].map(header => header.trim());
-    console.log('CSVヘッダー:', headers);
-    
-    // 期待されるヘッダーと照合
-    const expectedHeaders = ['役職名', '陣営', '能力', '勝利条件', '制作者'];
-    const missingHeaders = expectedHeaders.filter(expected => !headers.includes(expected));
-    if (missingHeaders.length > 0) {
-        console.warn('不足しているヘッダー:', missingHeaders);
-        showMessage(`警告: 次のヘッダーが見つかりません: ${missingHeaders.join(', ')}`, true);
-    }
-    
-    // データ行を処理
-    const data = [];
-    for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
-        const values = rows[rowIndex];
-        const obj = {};
-        
-        // ヘッダーと値をマッピング
-        for (let colIndex = 0; colIndex < headers.length; colIndex++) {
-            const header = headers[colIndex];
-            const value = values[colIndex] || '';
-            obj[header] = value;
-        }
-        
-        // データの検証
-        const roleName = obj['役職名'] || '';
-        const team = obj['陣営'] || '';
-        const ability = obj['能力'] || '';
-        const winCondition = obj['勝利条件'] || '';
-        const author = obj['制作者'] || '';
-        
-        console.log(`行 ${rowIndex + 1} の解析結果:`, {
-            役職名: roleName,
-            陣営: team,
-            能力: ability.substring(0, 50) + (ability.length > 50 ? '...' : ''),
-            勝利条件: winCondition,
-            制作者: author
-        });
-        
-        // 必須フィールドが全て存在する場合のみ追加
-        if (roleName && team && ability && winCondition && author) {
-            data.push(obj);
-        } else {
-            console.warn(`行 ${rowIndex + 1} でデータが不完全:`, {
-                役職名: !!roleName,
-                陣営: !!team,
-                能力: !!ability,
-                勝利条件: !!winCondition,
-                制作者: !!author
-            });
-        }
-    }
-    
-    console.log('最終的な有効データ数:', data.length);
-    console.log('最初のデータ例:', data[0]);
-    
-    return data;
-}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const CONFIG = window.CONFIG || {};
@@ -250,14 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // index.html (GMツール) の初期化
     // ====================================================================
     if (currentPage === 'gm-tool-page') {
-        let rolesData = [];
+        let rolesData = { villager: [], werewolf: [], thirdParty: [] };
         let playerAssignments = [];
 
         const participantsTextarea = document.getElementById('participants');
-        const csvFileInput = document.getElementById('csv-file-input');
+        // 新しいUI要素の取得
+        const fortuneTellerCountInput = document.getElementById('fortune-teller-count');
+        const mediumCountInput = document.getElementById('medium-count');
+        const knightCountInput = document.getElementById('knight-count');
         const villagerCountInput = document.getElementById('villager-count');
         const werewolfCountInput = document.getElementById('werewolf-count');
+        const madmanCountInput = document.getElementById('madman-count');
         const thirdPartyCountInput = document.getElementById('third-party-count');
+
         const generateButton = document.getElementById('generate-button');
         const setupArea = document.getElementById('setup-area');
         const resultArea = document.getElementById('result-area');
@@ -275,107 +159,111 @@ document.addEventListener('DOMContentLoaded', () => {
         const teamCountToggle = document.getElementById('team-count-toggle');
         const roleNameToggle = document.getElementById('role-name-toggle');
 
-        const loadDefaultCsv = async () => {
+        const loadAllJsons = async () => {
+            const files = ['villager-roles.json', 'murder-roles.json', '3rd-roles.json'];
+            showLoading('役職データを読み込み中...');
             try {
-                const response = await fetch('./roles.csv');
-                if (!response.ok) throw new Error(`HTTPエラー: ${response.status}`);
-                const text = await response.text();
-                rolesData = parseCSV(text);
-                console.log('読み込まれた役職データ:', rolesData); // デバッグ用ログ
-                showSuccess(`役職リスト (roles.csv) を読み込みました (${rolesData.length}件)`);
-                
-                // データの整合性をチェック
-                const validRoles = rolesData.filter(role => 
-                    role['役職名'] && role['陣営'] && role['能力'] && role['勝利条件'] && role['制作者']
-                );
-                if (validRoles.length !== rolesData.length) {
-                    console.warn(`${rolesData.length - validRoles.length}件の不完全なデータが見つかりました`);
-                    showError(`${rolesData.length - validRoles.length}件の不完全なデータが見つかりました。CSVファイルを確認してください。`);
-                }
-            } catch (error) { 
-                console.error('roles.csvの自動読み込みに失敗:', error); 
-                showError('roles.csvの自動読み込みに失敗しました。'); 
+                const results = await Promise.all(files.map(async file => {
+                    const response = await fetch(file);
+                    if (!response.ok) throw new Error(`${file}の読み込みに失敗しました。`);
+                    return await response.json();
+                }));
+
+                rolesData = results.flat();
+                console.log('すべての役職データを読み込みました:', rolesData);
+                showSuccess(`役職リストを読み込みました (${rolesData.length}件)`);
+
+            } catch (error) {
+                console.error('JSONの読み込みに失敗:', error);
+                showError(error.message);
+            } finally {
+                hideLoading();
             }
         };
 
-        csvFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    rolesData = parseCSV(e.target.result);
-                    console.log('CSVファイルから読み込まれた役職データ:', rolesData); // デバッグ用ログ
-                    showSuccess(`CSVファイルを読み込みました (${rolesData.length}件)`);
-                    
-                    // データの整合性をチェック
-                    const validRoles = rolesData.filter(role => 
-                        role['役職名'] && role['陣営'] && role['能力'] && role['勝利条件'] && role['制作者']
-                    );
-                    if (validRoles.length !== rolesData.length) {
-                        console.warn(`${rolesData.length - validRoles.length}件の不完全なデータが見つかりました`);
-                        showError(`${rolesData.length - validRoles.length}件の不完全なデータが見つかりました。CSVファイルを確認してください。`);
-                    }
-                } catch (error) { 
-                    console.error('CSV解析エラー:', error); 
-                    showError('CSVファイルの解析に失敗しました。'); 
-                }
-            };
-            reader.readAsText(file);
-        });
+        const assignRoles = (participants, allRoles, counts) => {
+            console.log('役職割り当て開始:', { participants, counts });
 
-        const assignRoles = (participants, roles, counts) => {
-            console.log('役職割り当て開始:', { participants, roles: roles.length, counts });
-            
-            // 各陣営の役職を取得する関数（エラーチェック付き）
-            const getRolesByTeam = (team, count) => {
-                const teamRoles = roles.filter(r => r && r['陣営'] === team);
-                console.log(`${team}の役職:`, teamRoles);
+            // カテゴリに基づいて役職を取得する内部関数
+            const getRolesByCategory = (team, category, count) => {
+                const filteredRoles = allRoles.filter(r => r && r['陣営'] === team && r['分類'] === category);
+                if (filteredRoles.length < count) {
+                    throw new Error(`${team}の${category}役職が不足しています。必要: ${count}件, 利用可能: ${filteredRoles.length}件`);
+                }
+                return filteredRoles.sort(() => 0.5 - Math.random()).slice(0, count);
+            };
+
+            // 第三陣営の役職を取得する関数
+            const getThirdPartyRoles = (count) => {
+                const teamRoles = allRoles.filter(r => r && r['陣営'] === '第三陣営');
                 if (teamRoles.length < count) {
-                    throw new Error(`${team}の役職が不足しています。必要: ${count}件, 利用可能: ${teamRoles.length}件`);
+                    throw new Error(`第三陣営の役職が不足しています。必要: ${count}件, 利用可能: ${teamRoles.length}件`);
                 }
                 return teamRoles.sort(() => 0.5 - Math.random()).slice(0, count);
             };
 
             try {
-                const availableRoles = [
-                    ...getRolesByTeam('村人陣営', counts.villager),
-                    ...getRolesByTeam('人狼陣営', counts.werewolf),
-                    ...getRolesByTeam('第三陣営', counts.thirdParty)
+                // 1. 初期抽選
+                let initialRoles = [
+                    ...getRolesByCategory('村人陣営', '占い師系', counts.fortuneTeller),
+                    ...getRolesByCategory('村人陣営', '霊媒師系', counts.medium),
+                    ...getRolesByCategory('村人陣営', '騎士系', counts.knight),
+                    ...getRolesByCategory('村人陣営', '一般', counts.villager),
+                    ...getRolesByCategory('人狼陣営', '人狼', counts.werewolf),
+                    ...getRolesByCategory('人狼陣営', '狂人', counts.madman),
+                    ...getThirdPartyRoles(counts.thirdParty)
                 ];
 
-                console.log('選択された役職:', availableRoles);
+                // 2. 関連役職の処理
+                const relatedRolesToAdd = [];
+                const rolesToRemove = new Set();
+                let generalVillagers = initialRoles.filter(r => r['分類'] === '一般');
+
+                initialRoles.forEach(role => {
+                    const relatedRoleName = role['関連役職'];
+                    const relatedRoleCount = parseInt(role['関連役職人数'], 10);
+
+                    if (relatedRoleName && relatedRoleCount > 0) {
+                        const relatedRole = allRoles.find(r => r['役職名'] === relatedRoleName);
+                        if (relatedRole) {
+                            for (let i = 0; i < relatedRoleCount; i++) {
+                                relatedRolesToAdd.push(relatedRole);
+                                // 代わりに一般村人を削除
+                                if (generalVillagers.length > 0) {
+                                    const toRemove = generalVillagers.pop();
+                                    rolesToRemove.add(toRemove);
+                                } else {
+                                    // 削除する一般村人がいない場合、エラーまたは代替策
+                                    console.warn('関連役職を追加するための空きがありません。');
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // 削除対象を除外し、関連役職を追加
+                let finalRoles = initialRoles.filter(r => !rolesToRemove.has(r));
+                finalRoles.push(...relatedRolesToAdd);
+
+                // 最終的な人数チェック
+                if (finalRoles.length !== participants.length) {
+                    throw new Error(`最終的な役職数(${finalRoles.length})が参加者数(${participants.length})と一致しません。関連役職の設定を確認してください。`);
+                }
+
+                console.log('最終的に選択された役職:', finalRoles);
 
                 const passwords = ['寿司','ラーメン','天ぷら','お好み焼き','たこ焼き','うどん','そば','カレー','とんかつ','焼き鳥','おにぎり','味噌汁','刺身','枝豆','餃子','唐揚げ','焼き魚','すき焼き','しゃぶしゃぶ','おでん','もんじゃ焼き','カツ丼','親子丼','牛丼','うなぎ','とろろ','茶碗蒸し','漬物','納豆','梅干し'].sort(() => 0.5 - Math.random());
                 
                 return [...participants].sort(() => 0.5 - Math.random()).map((participant, index) => {
-                    const role = availableRoles[index];
+                    const role = finalRoles[index];
                     if (!role) {
                         throw new Error(`参加者 ${participant} に割り当てる役職がありません。`);
                     }
-                    
-                    console.log(`${participant} に割り当てられる役職:`, role);
-                    
-                    // フィールド名を明示的に指定してデータを取得
-                    const roleName = role['役職名'] || '不明';
-                    const team = role['陣営'] || '不明';
-                    const ability = role['能力'] || '不明';
-                    const winCondition = role['勝利条件'] || '不明';
-                    const author = role['制作者'] || '不明';
-                    const fortuneResult = role['占い結果'] || (team === '人狼陣営' ? '人狼' : '人狼ではない');
-                    
-                    console.log(`フィールド詳細 - 役職名: "${roleName}", 陣営: "${team}", 能力: "${ability.substring(0, 50)}...", 勝利条件: "${winCondition}", 制作者: "${author}"`);
-                    
-                    return { 
-                        name: participant, 
-                        role: roleName, 
-                        team: team, 
-                        ability: ability, 
-                        winCondition: winCondition, 
-                        author: author, 
-                        fortuneResult: fortuneResult, 
-                        password: passwords[index] || `pass${index+1}` 
-                    };
+                    // 元の役職オブジェクトをコピーし、プレイヤー名とパスワードを追加する
+                    const assignment = { ...role };
+                    assignment.name = participant;
+                    assignment.password = passwords[index] || `pass${index+1}`;
+                    return assignment;
                 });
             } catch (error) {
                 console.error('役職割り当てエラー:', error);
@@ -391,18 +279,27 @@ const generateGMDetailedList = (assignments) => {
         const card = document.createElement('div');
         card.className = 'player-card';
         
-        // 能力と勝利条件の改行を<br>タグに変換
-        const abilityHtml = a.ability.replace(/\n/g, '<br>');
-        const winConditionHtml = a.winCondition.replace(/\n/g, '<br>');
-        
+        const abilityHtml = (a['能力'] || '説明なし').replace(/\n/g, '<br>');
+        const winConditionHtml = (a['勝利条件'] || '説明なし').replace(/\n/g, '<br>');
+        const fortuneResult = a['占い結果'] || (a['陣営'] === '人狼陣営' && a['分類'] === '人狼' ? '人狼' : '人狼ではない');
+
+        let relatedRoleHtml = '';
+        if (a['関連役職']) {
+            relatedRoleHtml = `
+                <div><strong>関連役職:</strong> ${a['関連役職']}</div>
+                <div><strong>関連人数:</strong> ${a['関連役職人数']}</div>
+            `;
+        }
+
         card.innerHTML = `
             <div class="player-card-grid">
                 <div><strong>プレイヤー:</strong> ${a.name}</div>
-                <div><strong>役職:</strong> ${a.role}</div>
-                <div><strong>陣営:</strong> ${a.team}</div>
+                <div><strong>役職:</strong> ${a['役職名']}</div>
+                <div><strong>陣営:</strong> ${a['陣営']}</div>
                 <div><strong>合言葉:</strong> ${a.password}</div>
-                <div><strong>占い結果:</strong> ${a.fortuneResult}</div>
-                <div><strong>制作者:</strong> ${a.author}</div>
+                <div><strong>占い結果:</strong> ${fortuneResult}</div>
+                <div><strong>制作者:</strong> ${a['制作者']}</div>
+                ${relatedRoleHtml}
             </div>
             <div class="player-card-details">
                 <strong>能力:</strong> ${abilityHtml}
@@ -477,13 +374,27 @@ const generateGMDetailedList = (assignments) => {
 
         generateButton.addEventListener('click', async () => {
             const participants = participantsTextarea.value.split('\n').map(name => name.trim()).filter(Boolean);
-            const counts = { villager: parseInt(villagerCountInput.value), werewolf: parseInt(werewolfCountInput.value), thirdParty: parseInt(thirdPartyCountInput.value) };
-            const totalRolesCount = counts.villager + counts.werewolf + counts.thirdParty;
-            
+            const counts = {
+                fortuneTeller: parseInt(fortuneTellerCountInput.value, 10) || 0,
+                medium: parseInt(mediumCountInput.value, 10) || 0,
+                knight: parseInt(knightCountInput.value, 10) || 0,
+                villager: parseInt(villagerCountInput.value, 10) || 0,
+                werewolf: parseInt(werewolfCountInput.value, 10) || 0,
+                madman: parseInt(madmanCountInput.value, 10) || 0,
+                thirdParty: parseInt(thirdPartyCountInput.value, 10) || 0,
+            };
+            const totalRolesCount = Object.values(counts).reduce((sum, count) => sum + count, 0);
+
             if (participants.length === 0) return showError('参加者を入力してください。');
-            if (rolesData.length === 0) return showError('役職データが読み込まれていません。CSVを読み込んでください。');
+            if (rolesData.length === 0) return showError('役職データが読み込まれていません。ページをリロードしてみてください。');
             if (participants.length !== totalRolesCount) return showError(`参加者数 (${participants.length}) と役職合計 (${totalRolesCount}) が一致しません。`);
-            
+
+            if (counts.fortuneTeller === 0) {
+                if (!confirm('占い師が0人ですが、本当にこの設定で役職を抽選しますか？')) {
+                    return;
+                }
+            }
+
             try {
                 playerAssignments = assignRoles(participants, rolesData, counts);
                 
@@ -496,7 +407,7 @@ const generateGMDetailedList = (assignments) => {
                         const storage = new JSONBinStorage(CONFIG.jsonbinApiKey);
                         const newBinId = await storage.save(encryptedData);
                         displayResults(playerAssignments, newBinId);
-                        saveState(playerAssignments, newBinId);
+                        // saveState(playerAssignments, newBinId); // TODO: saveStateを新しいcountsに対応させる
                     } else {
                         showError("JSONBin.ioのAPIキーが設定されていないため、URL共有機能は利用できません。");
                     }
@@ -566,7 +477,7 @@ const generateGMDetailedList = (assignments) => {
         copyProgressButton.addEventListener('click', () => navigator.clipboard.writeText(progressOutput.value).then(() => showSuccess('進行状況をコピーしました！'), () => showError('コピーに失敗しました。')));
 
         // 初期化処理
-        loadDefaultCsv();
+        loadAllJsons();
         loadSavedState();
     }
 
@@ -614,15 +525,14 @@ const generateGMDetailedList = (assignments) => {
     if (!allAssignmentsData) return showError('役職データが読み込まれていません。');
     const assignment = allAssignmentsData.find(a => a.password === password);
     if (assignment) {
-        document.getElementById('role-output').textContent = assignment.role;
-        document.getElementById('team-output').textContent = assignment.team;
-        document.getElementById('fortune-result-output').textContent = assignment.fortuneResult;
-        
-        // 能力と勝利条件を改行対応で表示
-        document.getElementById('ability-output').innerHTML = assignment.ability.replace(/\n/g, '<br>');
-        document.getElementById('win-condition-output').innerHTML = assignment.winCondition.replace(/\n/g, '<br>');
-        
-        document.getElementById('author-output').textContent = assignment.author;
+        const fortuneResult = assignment['占い結果'] || (assignment['陣営'] === '人狼陣営' && assignment['分類'] === '人狼' ? '人狼' : '人狼ではない');
+
+        document.getElementById('role-output').textContent = assignment['役職名'];
+        document.getElementById('team-output').textContent = assignment['陣営'];
+        document.getElementById('fortune-result-output').textContent = fortuneResult;
+        document.getElementById('ability-output').innerHTML = (assignment['能力'] || '説明なし').replace(/\n/g, '<br>');
+        document.getElementById('win-condition-output').innerHTML = (assignment['勝利条件'] || '説明なし').replace(/\n/g, '<br>');
+        document.getElementById('author-output').textContent = assignment['制作者'] || '不明';
         resultDisplay.style.display = 'block';
         inputArea.style.display = 'none';
         showSuccess(`${assignment.name}さんの役職を表示しました`);

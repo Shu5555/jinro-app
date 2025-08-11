@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>役職データ生成 - 村人陣営</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>役職データ生成 - 村人陣営</h1>
+        <form id="role-form">
+            <div class="form-group">
+                <label for="role-name">役職名</label>
+                <input type="text" id="role-name" required>
+            </div>
+            <div class="form-group">
+                <label for="category">分類</label>
+                <select id="category">
+                    <option value="占い師系">占い師系</option>
+                    <option value="霊媒師系">霊媒師系</option>
+                    <option value="騎士系">騎士系</option>
+                    <option value="一般">一般</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="ability">能力</label>
+                <textarea id="ability" rows="4"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="fortune-result">占い結果</label>
+                <select id="fortune-result">
+                    <option value="人狼ではない">人狼ではない</option>
+                    <option value="人狼である">人狼である</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="related-role">関連役職</label>
+                <input type="text" id="related-role">
+            </div>
+            <div class="form-group">
+                <label for="related-role-count">関連役職人数</label>
+                <input type="number" id="related-role-count" value="0">
+            </div>
+            <div class="form-group">
+                <label for="author">制作者</label>
+                <input type="text" id="author" required>
+            </div>
+            <button type="button" id="generate-btn">生成</button>
+        </form>
+        <div class="output-area">
+            <h2>生成されたCSVデータ列</h2>
+            <textarea id="output" readonly></textarea>
+            <button type="button" id="copy-btn">コピー</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
